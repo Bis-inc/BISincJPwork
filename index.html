@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loading…</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     CONFIG-DRIVEN SITE — see the CONFIG block in the script tag
+     at the bottom of this file to set your business name, logo,
+     contact info, Google Sheet ID and Apps Script Web App URL.
+     ============================================================ */
+
+  :root{
+    --ink:#1F2A1A;
+    --ink-2:#334A24;
+    --green:#7FA83E;
+    --green-light:#A6C953;
+    --paper:#FAFBF6;
+    --paper-alt:#EFF4E4;
+    --card:#FFFFFF;
+    --seal:#DC000A;
+    --seal-dark:#B10008;
+    --charcoal:#1A1A1A;
+    --slate:#5C6455;
+    --line:#DCE3D0;
+    --radius:4px;
+    --serif:'Fraunces', Georgia, serif;
+    --sans:'IBM Plex Sans', -apple-system, Segoe UI, sans-serif;
+    --mono:'IBM Plex Mono', Menlo, monospace;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; background:var(--paper); color:var(--charcoal);
+    font-family:var(--sans); line-height:1.55; font-size:16px;
+  }
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *{animation-duration:.01ms !important; transition-duration:.01ms !important;}
+  }
+  img{max-width:100%; display:block;}
+  a{color:inherit;}
+  h1,h2,h3{font-family:var(--serif); color:var(--ink); margin:0 0 .4em 0; font-weight:600;}
+  h2{font-size:1.85rem;}
+  .eyebrow{
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--green); display:flex; align-items:center; gap:.6em; margin-bottom:.9em;
+  }
+  .eyebrow::before{content:""; width:22px; height:1px; background:var(--green);}
+  .wrap{max-width:1080px; margin:0 auto; padding:0 24px;}
+  section{padding:76px 0;}
+  .btn{
+    font-family:var(--sans); font-weight:600; font-size:.95rem; letter-spacing:.01em;
+    padding:14px 26px; border-radius:var(--radius); border:1.5px solid var(--ink);
+    background:var(--ink); color:var(--paper); cursor:pointer; display:inline-flex;
+    align-items:center; gap:.5em; transition:transform .15s ease, background .15s ease, color .15s ease;
+    text-decoration:none;
+  }
+  .btn:hover{background:var(--ink-2); transform:translateY(-1px);}
+  .btn:focus-visible{outline:3px solid var(--green); outline-offset:2px;}
+  .btn.ghost{background:transparent; color:var(--ink);}
+  .btn.ghost:hover{background:var(--ink); color:var(--paper);}
+  .btn.seal{background:var(--seal); border-color:var(--seal); color:#fff;}
+  .btn.seal:hover{background:var(--seal-dark);}
+  .btn:disabled{opacity:.45; cursor:not-allowed; transform:none;}
+
+  /* ---------- Header ---------- */
+  header{
+    position:sticky; top:0; z-index:50; background:rgba(247,244,236,.92);
+    backdrop-filter:blur(6px); border-bottom:1px solid var(--line);
+  }
+  .nav{display:flex; align-items:center; justify-content:space-between; padding:16px 24px; max-width:1080px; margin:0 auto;}
+  .brand{display:flex; align-items:center; gap:12px; text-decoration:none;}
+  .brand img{height:44px; width:auto; max-width:150px; object-fit:contain; display:block;}
+  .brand-name{font-family:var(--serif); font-weight:700; font-size:1.15rem; color:var(--ink);}
+  .nav-links{display:flex; gap:28px; font-size:.92rem; font-weight:500;}
+  .nav-links a{text-decoration:none; color:var(--charcoal); border-bottom:2px solid transparent; padding-bottom:3px;}
+  .nav-links a:hover{border-color:var(--green);}
+  .nav-cta{display:none;}
+  @media(min-width:720px){.nav-cta{display:inline-flex;}}
+  .nav-links{display:none;}
+  @media(min-width:900px){.nav-links{display:flex;}}
+
+  /* ---------- Hero ---------- */
+  .hero{
+    padding:88px 0 70px; position:relative; overflow:hidden;
+    background:
+      radial-gradient(600px 300px at 85% -10%, rgba(127,168,62,.10), transparent 60%),
+      var(--paper);
+  }
+  .hero-grid{display:grid; gap:40px; align-items:center;}
+  @media(min-width:860px){.hero-grid{grid-template-columns:1.1fr .9fr;}}
+  .hero h1{font-size:clamp(2.1rem, 4.4vw, 3.3rem); line-height:1.08; letter-spacing:-.01em;}
+  .hero p.lead{font-size:1.08rem; color:var(--slate); max-width:46ch; margin:18px 0 30px;}
+  .hero-actions{display:flex; gap:14px; flex-wrap:wrap;}
+  .passport{
+    background:var(--card); border:1px solid var(--line); border-radius:8px;
+    padding:26px; box-shadow:0 18px 40px -22px rgba(31,42,26,.28);
+    position:relative;
+  }
+  .passport::before{
+    content:"公認"; position:absolute; top:20px; right:20px; font-family:var(--serif);
+    font-size:.7rem; color:var(--green); border:1.5px solid var(--green); border-radius:50%;
+    width:44px; height:44px; display:flex; align-items:center; justify-content:center;
+    transform:rotate(-8deg); opacity:.85;
+  }
+  .passport h3{font-size:1.05rem; margin-bottom:14px;}
+  .passport ul{list-style:none; margin:0; padding:0; display:grid; gap:12px;}
+  .passport li{display:flex; gap:12px; font-size:.92rem; color:var(--charcoal);}
+  .passport li .num{
+    font-family:var(--mono); font-size:.75rem; color:var(--green); border:1px solid var(--green);
+    width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+
+  /* ---------- About ---------- */
+  .about{background:var(--paper-alt); border-top:1px solid var(--line); border-bottom:1px solid var(--line);}
+  .about-intro{max-width:70ch; color:var(--charcoal); font-size:1.02rem;}
+  .about-intro p{margin:0 0 1.1em 0; color:var(--slate);}
+  .about-intro p:first-child{color:var(--charcoal); font-size:1.06rem;}
+
+  .industries{background:var(--paper-alt); border-top:1px solid var(--line); border-bottom:1px solid var(--line);}
+  .industries h2{max-width:26ch; margin-bottom:28px;}
+  .industries-grid{display:grid; gap:14px; margin-bottom:26px;}
+  @media(min-width:640px){.industries-grid{grid-template-columns:repeat(2,1fr);}}
+  @media(min-width:980px){.industries-grid{grid-template-columns:repeat(3,1fr);}}
+  .industry-card{background:var(--card); border:1px solid var(--line); border-radius:6px; padding:18px 20px; display:flex; gap:12px; align-items:flex-start;}
+  .industry-card .dot{width:9px; height:9px; border-radius:50%; background:var(--green); margin-top:7px; flex-shrink:0;}
+  .industry-card h4{font-family:var(--serif); color:var(--ink); font-size:1rem; margin:0 0 4px;}
+  .industry-card p{color:var(--slate); font-size:.86rem; margin:0;}
+
+  .flow{background:var(--paper);}
+  .flow-lede{color:var(--slate); max-width:62ch; font-size:1.02rem; margin-bottom:36px;}
+  .flow-list{background:var(--card); border:1px solid var(--line); border-radius:8px; padding:10px 34px;}
+  .flow-item{display:grid; grid-template-columns:74px 1fr; gap:20px; padding:28px 0; border-bottom:1px dashed var(--line);}
+  .flow-item:last-child{border-bottom:none;}
+  .flow-num{font-family:var(--serif); font-weight:700; font-size:2.6rem; color:var(--green); line-height:1; letter-spacing:-.02em;}
+  .flow-body h4{font-family:var(--sans); font-weight:600; font-size:1.08rem; color:var(--ink); margin:2px 0 8px;}
+  .flow-body p{color:var(--slate); font-size:.92rem; margin:0;}
+  .flow-body ol{color:var(--slate); font-size:.92rem; margin:6px 0 0; padding-left:1.2em;}
+  .flow-body ol li{margin-bottom:4px;}
+  @media(max-width:520px){
+    .flow-list{padding:6px 18px;}
+    .flow-item{grid-template-columns:1fr; gap:6px;}
+    .flow-num{font-size:2rem;}
+  }
+
+  /* ---------- Bulletin ---------- */
+  .bulletin-head{display:flex; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom:30px;}
+  .bulletin-grid{display:grid; gap:22px;}
+  @media(min-width:720px){.bulletin-grid{grid-template-columns:repeat(2,1fr);}}
+  @media(min-width:1040px){.bulletin-grid{grid-template-columns:repeat(3,1fr);}}
+  .post{background:var(--card); border:1px solid var(--line); border-radius:6px; overflow:hidden; display:flex; flex-direction:column;}
+  .post .media{aspect-ratio:16/10; background:var(--paper-alt); overflow:hidden;}
+  .post .media img, .post .media video{width:100%; height:100%; object-fit:cover;}
+  .post-body{padding:18px 20px 22px; flex:1; display:flex; flex-direction:column;}
+  .post-date{font-family:var(--mono); font-size:.7rem; color:var(--green); letter-spacing:.06em; text-transform:uppercase; margin-bottom:8px;}
+  .post h4{font-family:var(--serif); font-size:1.08rem; color:var(--ink); margin:0 0 8px;}
+  .post p{color:var(--slate); font-size:.9rem; margin:0; flex:1;}
+  .bulletin-empty, .bulletin-error{color:var(--slate); font-size:.92rem; padding:30px; border:1px dashed var(--line); border-radius:6px; text-align:center;}
+
+  /* ---------- Wizard ---------- */
+  .wizard-section{background:var(--paper-alt); border-top:1px solid var(--line);}
+  .wizard-card{
+    background:var(--card); border:1px solid var(--line); border-radius:8px; padding:34px;
+    max-width:760px; margin:0 auto; box-shadow:0 24px 50px -30px rgba(31,42,26,.28);
+  }
+  .trail{display:flex; align-items:center; gap:6px; margin-bottom:30px; flex-wrap:wrap;}
+  .stamp{
+    width:30px; height:30px; border-radius:50%; border:1.5px solid var(--line); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:.7rem;
+    color:var(--slate); transition:all .2s ease;
+  }
+  .stamp.active{border-color:var(--green); color:var(--green); transform:rotate(-6deg);}
+  .stamp.done{background:var(--ink); border-color:var(--ink); color:#fff;}
+  .trail-line{flex:1; height:1px; background:var(--line); min-width:10px;}
+  .step-eyebrow{font-family:var(--mono); font-size:.7rem; letter-spacing:.1em; text-transform:uppercase; color:var(--slate); margin-bottom:8px;}
+  .step h3{font-size:1.4rem; margin-bottom:22px;}
+  .choice-grid{display:grid; gap:12px;}
+  .choice{
+    text-align:left; width:100%; background:var(--paper); border:1.5px solid var(--line);
+    border-radius:6px; padding:16px 18px; cursor:pointer; font-family:var(--sans); font-size:.95rem;
+    color:var(--charcoal); transition:border-color .15s ease, background .15s ease;
+  }
+  .choice:hover{border-color:var(--ink);}
+  .choice:focus-visible{outline:3px solid var(--green); outline-offset:2px;}
+  .choice strong{display:block; color:var(--ink); font-family:var(--serif); font-size:1.02rem; margin-bottom:3px;}
+  .choice span{color:var(--slate); font-size:.86rem;}
+  .step-actions{display:flex; justify-content:space-between; margin-top:26px; gap:12px;}
+  .field{margin-bottom:18px;}
+  .field label{display:block; font-family:var(--mono); font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; color:var(--slate); margin-bottom:7px;}
+  .field input[type=text], .field input[type=email], .field select{
+    width:100%; padding:12px 14px; border:1.5px solid var(--line); border-radius:5px; font-family:var(--sans);
+    font-size:.95rem; background:var(--paper); color:var(--charcoal);
+  }
+  .field input:focus, .field select:focus{outline:2px solid var(--ink); outline-offset:1px; border-color:var(--ink);}
+  .upload{
+    border:1.5px dashed var(--line); border-radius:6px; padding:18px; text-align:center; cursor:pointer;
+    background:var(--paper); transition:border-color .15s ease;
+  }
+  .upload:hover{border-color:var(--ink);}
+  .upload input{display:none;}
+  .upload .fname{font-size:.82rem; color:var(--ink); margin-top:6px; font-family:var(--mono);}
+  .note-box{background:var(--paper); border-left:3px solid var(--green); padding:14px 16px; font-size:.9rem; color:var(--slate); border-radius:0 5px 5px 0; margin-bottom:20px;}
+  .thankyou{text-align:center; padding:20px 0;}
+  .thankyou .stampmark{
+    width:86px; height:86px; border-radius:50%; border:3px solid var(--green); color:var(--green);
+    display:flex; align-items:center; justify-content:center; margin:0 auto 20px; transform:rotate(-8deg);
+    font-family:var(--serif); font-weight:700; font-size:.95rem;
+  }
+  .error-msg{color:var(--seal-dark); font-size:.85rem; margin-top:10px;}
+  .progress-msg{font-size:.85rem; color:var(--slate); margin-top:12px; font-family:var(--mono);}
+
+  /* ---------- Contact / Footer ---------- */
+  .contact{background:var(--ink); color:var(--paper);}
+  .contact h2{color:#fff;}
+  .contact-grid{display:grid; gap:30px;}
+  @media(min-width:760px){.contact-grid{grid-template-columns:1fr 1fr;}}
+  .contact-card{background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); border-radius:6px; padding:26px;}
+  .contact-card h4{font-family:var(--mono); font-size:.75rem; letter-spacing:.08em; text-transform:uppercase; color:#C9D6E5; margin:0 0 12px;}
+  .contact-card a, .contact-card p{color:#fff; text-decoration:none; font-size:.98rem;}
+  .contact-card .row{display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid rgba(255,255,255,.1); font-size:.92rem;}
+  .contact-card .row:last-child{border-bottom:none;}
+  footer{background:#16283F; color:#9FB0C4; padding:26px 0; font-size:.82rem; text-align:center;}
+  footer a{color:#C9D6E5;}
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a class="brand" href="#top">
+      <img id="logoImg" src="" alt="">
+      <span class="brand-name" id="brandName">Loading…</span>
+    </a>
+    <div class="nav-links">
+      <a href="#about">About</a>
+      <a href="#industries">Industries</a>
+      <a href="#flow">How it works</a>
+      <a href="#bulletin">Updates</a>
+      <a href="#apply">Apply</a>
+      <a href="#contact">Contact</a>
+    </div>
+    <a class="btn seal nav-cta" href="#apply">Start application</a>
+  </nav>
+</header>
+
+<main id="top">
+
+  <!-- ================= HERO ================= -->
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <div class="eyebrow">TITP &amp; SSW placement</div>
+        <h1 id="heroHeadline">Your route to work in Japan, mapped out step by step.</h1>
+        <p class="lead" id="heroLead">Whether this is your first application or you're renewing under SSW, answer a few questions and we'll show you exactly what's needed next — no paperwork guesswork.</p>
+        <div class="hero-actions">
+          <a href="#apply" class="btn seal">Check what I need &rarr;</a>
+          <a href="#bulletin" class="btn ghost">See latest updates</a>
+        </div>
+      </div>
+      <div class="passport">
+        <h3>How the application works</h3>
+        <ul>
+          <li><span class="num">1</span> Tell us your background — first-time, ex-TITP, or current SSW</li>
+          <li><span class="num">2</span> We check which certificates you already have</li>
+          <li><span class="num">3</span> Upload what you have — we tell you if anything's missing</li>
+          <li><span class="num">4</span> We review and contact you directly</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ABOUT ================= -->
+  <section class="about" id="about">
+    <div class="wrap">
+      <div class="eyebrow">About us</div>
+      <h2 id="aboutHeadline">Company Introduction</h2>
+      <div class="about-intro" id="aboutIntro"></div>
+    </div>
+  </section>
+
+  <!-- ================= INDUSTRIES ================= -->
+  <section class="industries" id="industries">
+    <div class="wrap">
+      <div class="eyebrow">Where we place talent</div>
+      <h2>Status of job types available for acceptance support</h2>
+      <div class="industries-grid" id="industriesGrid"></div>
+      <div class="note-box" id="requirementsNote"></div>
+    </div>
+  </section>
+
+  <!-- ================= BULLETIN ================= -->
+  <section id="bulletin">
+    <div class="wrap">
+      <div class="bulletin-head">
+        <div>
+          <div class="eyebrow">Bulletin board</div>
+          <h2>Latest updates</h2>
+        </div>
+      </div>
+      <div class="bulletin-grid" id="bulletinGrid">
+        <div class="bulletin-empty">Loading updates…</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= APPLICATION FLOW ================= -->
+  <section class="flow" id="flow">
+    <div class="wrap">
+      <div class="eyebrow">How it works</div>
+      <h2>Job Application Flow</h2>
+      <p class="flow-lede" id="flowLede">From your first message to us, to settling into your job in Japan — here's exactly what happens at every stage.</p>
+      <div class="flow-list" id="flowList"></div>
+    </div>
+  </section>
+
+  <!-- ================= WIZARD ================= -->
+  <section class="wizard-section" id="apply">
+    <div class="wrap">
+      <div class="eyebrow">Application screening</div>
+      <h2 style="margin-bottom:30px;">Find out what you need</h2>
+
+      <div class="wizard-card">
+        <div class="trail" id="trail"></div>
+        <div id="stepContainer"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CONTACT ================= -->
+  <section class="contact" id="contact">
+    <div class="wrap">
+      <div class="eyebrow" style="color:#9FC1E8;">Contact</div>
+      <h2>Talk to us directly</h2>
+      <div class="contact-grid" style="margin-top:26px;">
+        <div class="contact-card">
+          <h4>Reach us</h4>
+          <div class="row"><span>Email</span><a id="contactEmail" href="#"></a></div>
+          <div class="row"><span>Phone</span><a id="contactPhone" href="#"></a></div>
+          <div class="row"><span>Office</span><span id="contactAddress"></span></div>
+        </div>
+        <div class="contact-card">
+          <h4>Prefer chat?</h4>
+          <p style="color:#C9D6E5; margin-bottom:16px;">We use two separate Facebook Pages depending on what you need — message the one that fits.</p>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <a id="fbHiringLink" class="btn seal" href="#" target="_blank" rel="noopener">Hiring &amp; application questions</a>
+            <a id="fbStudyLink" class="btn ghost" href="#" target="_blank" rel="noopener" style="border-color:#fff; color:#fff;">Japanese study &amp; Prometric prep</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap" id="footerText">&copy; 2026 Your Company Name</div>
+</footer>
+
+<script>
+/* ================================================================
+   CONFIG — edit these values for your business. Nothing else in
+   this file needs to change for basic setup.
+   ================================================================ */
+const CONFIG = {
+  businessName: "Believe Image Success - BIS Inc.",
+  // Put your logo file in the same folder as this index.html and
+  // put its filename here (e.g. "logo.jpg" or "logo.png").
+  logoUrl: "logo.jpg",
+  heroHeadline: "Your route to work in Japan, mapped out step by step.",
+  heroLead: "Whether this is your first application or you're renewing under SSW, answer a few questions and we'll show you exactly what's needed next.",
+
+  aboutHeadline: "Company Introduction",
+  // Each item in this array becomes its own paragraph. Add or remove
+  // items freely — the page will lay them out automatically.
+  aboutIntro: [
+    "Nationwide Industry Support: We are a professional Registered Support Organization specializing in bringing Specified Skilled Workers from the Philippines to Japan. We provide reliable, nationwide support for essential industries, including linen supply, food service, food and beverage manufacturing, nursing care, construction, manufacturing, and auto repair.",
+    "Deep, Trusting Connections: We build strong, meaningful relationships with our foreign talent and local sending agencies in the Philippines, ensuring a stable and worry-free hiring process.",
+    "Commitment to Your Growth: Going beyond standard support, we are deeply dedicated to strengthening your production capacity and contributing to your long-term success."
+  ],
+
+  // Industries section — edit names/descriptions freely, add or remove rows.
+  industries: [
+    { name: "Linen supply", desc: "Linen supply business" },
+    { name: "Building cleaning", desc: "Building cleaning business" },
+    { name: "Food service", desc: "Japanese restaurants, yakiniku restaurants, food preparation for medical and welfare facilities" },
+    { name: "Food & beverage manufacturing", desc: "Seafood processing, Western-style confectionery, Japanese-style confectionery, processed meat" },
+    { name: "Construction", desc: "Scaffolding, formwork, rebar, earthwork, painting, waterproofing" },
+    { name: "Caregiving services", desc: "Day care, long-term care medical facilities, dementia-specific group homes" },
+    { name: "Manufacturing", desc: "Machinery and metal processing, factory sheet metal work, ironwork, welding, electrical and electronic equipment assembly" },
+    { name: "Automotive repair", desc: "Automotive repair business" },
+    { name: "Agriculture", desc: "Agriculture" },
+    { name: "Accommodation industry", desc: "Accommodation industry" }
+  ],
+  requirementsNote: "The application process and required documentation for accepting foreign workers with specified skills vary by industry. To ensure clear expectations, please carefully review our application process.",
+
+  // Job Application Flow — shown as a numbered list before the "Apply" wizard.
+  // Each step needs a title and either "desc" (a short paragraph) or
+  // "list" (an ordered list of smaller actions), not both.
+  applicationFlow: [
+    { title: "FB Manpower Ads and Posts", desc: "When we need additional staff, we post recruitment ads on Facebook and Instagram. The requesting company sets all applicant qualifications. " },
+    { title: "Receive Applicant Queries", desc: "An applicant sends a message via Facebook Messenger inquiring about our job postings." },
+    { title: "Verification of Desired Skills and Qualifications", desc: "We review applicants' documents (including JLPT, JFT, Prometric, and other required certificates) to align their qualifications with their desired job category. Qualified applicants are instructed to download and connect with us via the Google Chat app." },
+    { title: "Interview Scheduling and Candidate Profiling", list: [
+      "Send the Biodata form and calculation exam links.",
+      "Verify the Biodata information.",
+      "Create an interview list via the database and set up the interview link.",
+      "Confirm the interview date with the company."
+    ]},
+    { title: "Interview", desc: "Interview candidates join the interview proper set by the company." },
+    { title: "Japan Entry Document Preparation", desc: "Successful applicants will be contacted in preparation for their entry into Japan and will be advised to visit the local partner agency to sign their contract and other entry documents." },
+    { title: "Japan Entry", desc: "Once all entry documents have been processed and approved by the Japanese and Philippine governments, an air ticket for entry into Japan will be issued." },
+    { title: "Airport Arrival Assistance and Transportation to Employment Location", desc: "Upon successfully entering Japan, applicants will be picked up at the airport and transferred to their respective job sites." },
+    { title: "Monthly Support Visits and Life Consultations in Japan", desc: "Reliable, hands-on guidance for everyday life in Japan. We conduct routine check-ins to assist with cultural integration, administrative duties, and personal well-being, keeping our workforce happy and supported." }
+  ],
+
+  email: "bisjpwork@gmail.com",
+  phone: "+81 83-294-4949",
+  address: "Shimonoseki-Shi Yamaguchi-Ken, Japan",
+  // Two separate Facebook Pages/Messenger accounts:
+  facebookStudyUrl: "https://www.facebook.com/profile.php?id=61574251959067",     // Japanese-language & Prometric exam prep
+  facebookHiringUrl: "https://www.facebook.com/BISIncJPwork/",   // hiring / job application inquiries
+
+  // Google Sheet that stores the bulletin posts (Tab name: Bulletin)
+  // Sheet must be shared as "Anyone with the link – Viewer"
+  bulletinSheetId: "https://script.google.com/macros/s/AKfycbyYO7T6NT2qsrlUEI8umPPBa4lz5JcYYfYUcKFXsBehMMBfSZzXogMAfqH5Sh-I-UZ8/exec",
+  bulletinTabName: "Bulletin",
+
+  // Apps Script Web App URL (see Code.gs + SETUP_GUIDE.md) — used to
+  // submit applications (files + answers) to Drive/Sheets and email you.
+  webAppUrl: "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE"
+};
+
+// ---- apply config to the page ----
+document.title = CONFIG.businessName + " — TITP & SSW Application";
+document.getElementById('brandName').textContent = CONFIG.businessName;
+document.getElementById('logoImg').src = CONFIG.logoUrl;
+document.getElementById('logoImg').alt = CONFIG.businessName + " logo";
+document.getElementById('heroHeadline').textContent = CONFIG.heroHeadline;
+document.getElementById('heroLead').textContent = CONFIG.heroLead;
+document.getElementById('aboutHeadline').textContent = CONFIG.aboutHeadline;
+document.getElementById('aboutIntro').innerHTML = CONFIG.aboutIntro.map(p => `<p>${escapeHtml(p)}</p>`).join('');
+document.getElementById('industriesGrid').innerHTML = CONFIG.industries.map(i =>
+  `<div class="industry-card"><span class="dot"></span><div><h4>${escapeHtml(i.name)}</h4><p>${escapeHtml(i.desc)}</p></div></div>`
+).join('');
+document.getElementById('requirementsNote').textContent = CONFIG.requirementsNote;
+
+document.getElementById('flowList').innerHTML = CONFIG.applicationFlow.map((step, i) => {
+  const num = String(i + 1).padStart(2, '0');
+  const body = step.list
+    ? `<ol>${step.list.map(li => `<li>${escapeHtml(li)}</li>`).join('')}</ol>`
+    : `<p>${escapeHtml(step.desc)}</p>`;
+  return `<div class="flow-item"><div class="flow-num">${num}</div><div class="flow-body"><h4>${escapeHtml(step.title)}</h4>${body}</div></div>`;
+}).join('');
+document.getElementById('contactEmail').textContent = CONFIG.email;
+document.getElementById('contactEmail').href = "mailto:" + CONFIG.email;
+document.getElementById('contactPhone').textContent = CONFIG.phone;
+document.getElementById('contactPhone').href = "tel:" + CONFIG.phone.replace(/\s+/g,'');
+document.getElementById('contactAddress').textContent = CONFIG.address;
+document.getElementById('fbHiringLink').href = CONFIG.facebookHiringUrl;
+document.getElementById('fbStudyLink').href = CONFIG.facebookStudyUrl;
+document.getElementById('footerText').innerHTML = "&copy; " + new Date().getFullYear() + " " + CONFIG.businessName + " · " +
+  '<a href="admin.html">Staff bulletin login</a>';
+
+/* ================================================================
+   BULLETIN — reads rows from a public Google Sheet tab via the
+   gviz JSON endpoint. Expected columns in the "Bulletin" tab:
+   Date | Title | Text | MediaURL | MediaType(image/video/none)
+   New rows are added through admin.html (no coding needed).
+   ================================================================ */
+async function loadBulletin(){
+  const grid = document.getElementById('bulletinGrid');
+  if(CONFIG.bulletinSheetId.startsWith("PASTE_")){
+    grid.innerHTML = '<div class="bulletin-empty">Bulletin isn\'t connected yet — add your Google Sheet ID in CONFIG.</div>';
+    return;
+  }
+  const url = `https://docs.google.com/spreadsheets/d/${CONFIG.bulletinSheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(CONFIG.bulletinTabName)}`;
+  try{
+    const res = await fetch(url);
+    const text = await res.text();
+    const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}')+1));
+    const rows = json.table.rows || [];
+    if(rows.length === 0){
+      grid.innerHTML = '<div class="bulletin-empty">No updates posted yet. Check back soon.</div>';
+      return;
+    }
+    const items = rows.map(r=>{
+      const c = r.c;
+      return {
+        date: c[0] && c[0].f ? c[0].f : (c[0] ? c[0].v : ''),
+        title: c[1] ? c[1].v : '',
+        text: c[2] ? c[2].v : '',
+        mediaUrl: c[3] ? c[3].v : '',
+        mediaType: c[4] ? (c[4].v || '').toLowerCase() : ''
+      };
+    }).filter(i=>i.title).reverse();
+
+    grid.innerHTML = items.map(i=>{
+      let mediaHtml = '';
+      if(i.mediaType === 'video' && i.mediaUrl){
+        const yt = toYouTubeEmbed(i.mediaUrl);
+        mediaHtml = yt
+          ? `<div class="media"><iframe width="100%" height="100%" src="${yt}" frameborder="0" allowfullscreen></iframe></div>`
+          : `<div class="media"><video src="${escapeAttr(i.mediaUrl)}" controls></video></div>`;
+      } else if(i.mediaType === 'image' && i.mediaUrl){
+        mediaHtml = `<div class="media"><img src="${escapeAttr(driveDirectLink(i.mediaUrl))}" alt="${escapeAttr(i.title)}" loading="lazy"></div>`;
+      }
+      return `<article class="post">
+        ${mediaHtml}
+        <div class="post-body">
+          <div class="post-date">${escapeHtml(i.date)}</div>
+          <h4>${escapeHtml(i.title)}</h4>
+          <p>${escapeHtml(i.text)}</p>
+        </div>
+      </article>`;
+    }).join('');
+  }catch(err){
+    grid.innerHTML = '<div class="bulletin-error">Couldn\'t load updates right now. Please refresh, or check that the Google Sheet is shared as "Anyone with the link – Viewer".</div>';
+  }
+}
+function toYouTubeEmbed(url){
+  const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([\w-]{6,})/);
+  return m ? `https://www.youtube.com/embed/${m[1]}` : null;
+}
+function driveDirectLink(url){
+  const m = url.match(/\/d\/([\w-]{10,})/) || url.match(/[?&]id=([\w-]{10,})/);
+  return m ? `https://drive.google.com/uc?export=view&id=${m[1]}` : url;
+}
+function escapeHtml(s){ return (s||'').toString().replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function escapeAttr(s){ return escapeHtml(s); }
+loadBulletin();
+
+/* ================================================================
+   APPLICANT WIZARD
+   Implements the 12-path screening tree:
+   Category A: first-time applicant   (4 certificate combinations)
+   Category B: ex-TITP intern, 1 yr   (4 certificate combinations)
+   Category C: ex-TITP intern, 3 yrs -> moving to SSW (2 skill paths)
+   Category D: current SSW, changing company (2 skill paths)
+   ================================================================ */
+const CERT_COMBOS = [
+  { key:'none_none',   jlpt:false, prometric:false, label:'No JLPT N4/JFT, No Prometric certificate', desc:'No Japanese-language or skill-test certificates yet.' },
+  { key:'jlpt_none',   jlpt:true,  prometric:false, label:'With JLPT N4/JFT, No Prometric certificate', desc:'You have a language certificate but no skill test yet.' },
+  { key:'jlpt_prom',   jlpt:true,  prometric:true,  label:'With JLPT N4/JFT and Prometric certificate', desc:'You have both certificates ready.' },
+  { key:'none_prom',   jlpt:false, prometric:true,  label:'No JLPT N4/JFT, With Prometric certificate', desc:'You have a skill test certificate but no language certificate yet.' },
+];
+
+const state = { category:null, combo:null, skillChange:null, jlptLevel:null, willingStudy:null, files:{}, fields:{} };
+
+function renderTrail(activeIndex, total){
+  const trail = document.getElementById('trail');
+  trail.innerHTML = '';
+  for(let i=0;i<total;i++){
+    const s = document.createElement('div');
+    s.className = 'stamp' + (i<activeIndex?' done':'') + (i===activeIndex?' active':'');
+    s.textContent = i<activeIndex ? '✓' : (i+1);
+    trail.appendChild(s);
+    if(i<total-1){
+      const line = document.createElement('div');
+      line.className = 'trail-line';
+      trail.appendChild(line);
+    }
+  }
+}
+
+function stepShell(eyebrow, title, bodyHtml){
+  return `<div class="step">
+    <div class="step-eyebrow">${eyebrow}</div>
+    <h3>${title}</h3>
+    ${bodyHtml}
+  </div>`;
+}
+
+function goStep(name){
+  const c = document.getElementById('stepContainer');
+  window.currentStep = name;
+  renderStep(name);
+}
+
+const steps = {
+
+  category(){
+    renderTrail(0, 3);
+    document.getElementById('stepContainer').innerHTML = stepShell('Step 1 of 3', 'Which best describes you?', `
+      <div class="choice-grid">
+        <button class="choice" data-v="A"><strong>First-time applicant</strong><span>No prior work experience in Japan</span></button>
+        <button class="choice" data-v="B"><strong>Former TITP intern — 1 year in Japan</strong><span>Completed roughly one year as a technical intern trainee</span></button>
+        <button class="choice" data-v="C"><strong>Former TITP intern — 3 years, moving to SSW</strong><span>Completed a full TITP term and want to move to Specified Skilled Worker status</span></button>
+        <button class="choice" data-v="D"><strong>Currently SSW, changing company</strong><span>Already working under SSW and looking to transfer employer</span></button>
+      </div>`);
+    bindChoices(v=>{ state.category=v; goStep(v==='A'||v==='B' ? 'combo' : 'skillChange'); });
+  },
+
+  combo(){
+    renderTrail(1, 3);
+    document.getElementById('stepContainer').innerHTML = stepShell('Step 2 of 3', 'Which certificates do you already have?', `
+      <div class="choice-grid">
+        ${CERT_COMBOS.map(c=>`<button class="choice" data-v="${c.key}"><strong>${c.label}</strong><span>${c.desc}</span></button>`).join('')}
+      </div>
+      ${backBtn()}`);
+    bindChoices(v=>{
+      state.combo = CERT_COMBOS.find(c=>c.key===v);
+      if(state.combo.jlpt && state.combo.prometric){
+        goStep('contactForm');
+      } else {
+        goStep('studyQuestion');
+      }
+    });
+  },
+
+  studyQuestion(){
+    renderTrail(2, 3);
+    let need;
+    if(!state.combo.jlpt && !state.combo.prometric) need = 'Japanese language lessons (JLPT/JFT) and Prometric skill-test preparation';
+    else if(state.combo.jlpt && !state.combo.prometric) need = 'Prometric skill-test preparation';
+    else need = 'Japanese language lessons (JLPT/JFT)';
+    state.studyNeed = need;
+    document.getElementById('stepContainer').innerHTML = stepShell('Step 3 of 3', `Are you willing to study for ${need}?`, `
+      <div class="note-box">Based on what you have, you'd need to complete ${need} before we can proceed with placement.</div>
+      <div class="choice-grid">
+        <button class="choice" data-v="yes"><strong>Yes, I'm willing to study</strong><span>We'll connect you with our team on Facebook Messenger to get started</span></button>
+        <button class="choice" data-v="no"><strong>Not right now</strong><span>We'll note your interest for the future</span></button>
+      </div>
+      ${backBtn()}`);
+    bindChoices(v=>{
+      state.willingStudy = v;
+      if(v==='yes'){ goStep('studyLeadEmail'); }
+      else{ showThankYou("Thanks for your honesty — feel free to come back anytime you're ready to begin exam preparation."); }
+    });
+  },
+
+  studyLeadEmail(){
+    renderTrail(2, 3);
+    document.getElementById('stepContainer').innerHTML = stepShell('Before you go', `Leave your email so we can follow up`, `
+      <div class="note-box">We'll open Facebook Messenger next — but in case you don't get a chance to message us there, leave your email and our team will personally follow up about enrolling in ${state.studyNeed}.</div>
+      <div class="field"><label for="leadName">Full name</label><input type="text" id="leadName"></div>
+      <div class="field"><label for="leadEmail">Email address</label><input type="email" id="leadEmail" required></div>
+      <div class="step-actions">${backLink()}<button class="btn seal" id="leadContinueBtn">Continue to Messenger &rarr;</button></div>
+      <div id="leadMsg"></div>`);
+    bindBack();
+    document.getElementById('leadContinueBtn').addEventListener('click', submitStudyLead);
+  },
+
+
+  skillChange(){
+    renderTrail(1, 4);
+    document.getElementById('stepContainer').innerHTML = stepShell('Step 2 of 4', 'Are you moving under the same skill category or a different one?', `
+      <div class="choice-grid">
+        <button class="choice" data-v="same"><strong>Same skill category</strong><span>Continuing in the same field of work</span></button>
+        <button class="choice" data-v="different"><strong>Different skill category</strong><span>Moving into a new field of work</span></button>
+      </div>
+      ${backBtn()}`);
+    bindChoices(v=>{ state.skillChange=v; goStep('jlptLevel'); });
+  },
+
+  jlptLevel(){
+    renderTrail(2, 4);
+    document.getElementById('stepContainer').innerHTML = stepShell('Step 3 of 4', 'What is your current Japanese-language qualification?', `
+      <div class="field">
+        <label for="jlptSel">Qualification level</label>
+        <select id="jlptSel">
+          <option value="">Select one…</option>
+          <option value="JLPT N1">JLPT N1</option>
+          <option value="JLPT N2">JLPT N2</option>
+          <option value="JLPT N3">JLPT N3</option>
+          <option value="JLPT N4">JLPT N4</option>
+          <option value="JLPT N5">JLPT N5</option>
+          <option value="JFT-Basic">JFT-Basic</option>
+          <option value="None yet">None yet</option>
+        </select>
+      </div>
+      <div class="step-actions">${backLink()}<button class="btn seal" id="nextBtn">Continue &rarr;</button></div>`);
+    document.getElementById('nextBtn').addEventListener('click', ()=>{
+      const val = document.getElementById('jlptSel').value;
+      if(!val){ return; }
+      state.jlptLevel = val;
+      goStep('contactForm');
+    });
+    bindBack();
+  },
+
+  contactForm(){
+    const total = (state.category==='A'||state.category==='B') ? 3 : 4;
+    renderTrail(total-1, total);
+
+    // work out which upload fields this path needs
+    let uploads = [];
+    if(state.category==='A' || state.category==='B'){
+      uploads = [
+        {key:'jlptCert', label:'JLPT N4 / JFT certificate'},
+        {key:'prometricCert', label:'Prometric skill-test certificate'},
+      ];
+    } else if(state.category==='C'){
+      uploads = [
+        {key:'jlptCert', label:'JLPT / JFT certificate'},
+        {key:'titpSkillCert', label:'TITP skill-test certificate'},
+        state.skillChange==='same'
+          ? {key:'titpCompletionCert', label:'TITP completion certificate'}
+          : {key:'prometricCert', label:'Prometric certificate for your new job category'}
+      ];
+    } else if(state.category==='D'){
+      uploads = [
+        {key:'jlptCert', label:'JLPT / JFT certificate'},
+        {key:'titpSkillCert', label:'TITP skill-test certificate'},
+        state.skillChange==='same'
+          ? {key:'sswCurrentCert', label:'Current SSW skill certificate'}
+          : {key:'prometricCert', label:'Prometric certificate for your new job category'}
+      ];
+    }
+    state._uploads = uploads;
+
+    document.getElementById('stepContainer').innerHTML = stepShell(`Step ${total} of ${total}`, 'Your details', `
+      <div class="field"><label for="fName">Full name</label><input type="text" id="fName" required></div>
+      <div class="field"><label for="fEmail">Email address</label><input type="email" id="fEmail" required></div>
+      <div class="field"><label for="fJob">Desired job category / skill</label><input type="text" id="fJob" placeholder="e.g. Caregiving, Construction, Food Manufacturing" required></div>
+      ${uploads.map(u=>`
+        <div class="field">
+          <label>${u.label}</label>
+          <label class="upload" for="up_${u.key}">
+            <div>Tap to upload photo</div>
+            <div class="fname" id="fname_${u.key}">No file selected</div>
+          </label>
+          <input type="file" id="up_${u.key}" accept="image/*,.pdf" data-key="${u.key}">
+        </div>`).join('')}
+      <div class="step-actions">${backLink()}<button class="btn seal" id="submitBtn">Submit application</button></div>
+      <div id="submitMsg"></div>
+    `);
+    bindBack();
+    uploads.forEach(u=>{
+      document.getElementById(`up_${u.key}`).addEventListener('change', (e)=>{
+        const f = e.target.files[0];
+        document.getElementById(`fname_${u.key}`).textContent = f ? f.name : 'No file selected';
+        if(f) state.files[u.key] = f;
+      });
+    });
+    document.getElementById('submitBtn').addEventListener('click', submitApplication);
+  }
+};
+
+function backBtn(){ return `<div class="step-actions">${backLink()}<span></span></div>`; }
+function backLink(){ return `<button class="btn ghost" id="backBtn" type="button">&larr; Back</button>`; }
+function bindBack(){
+  const b = document.getElementById('backBtn');
+  if(b) b.addEventListener('click', ()=> goStep('category'));
+}
+function bindChoices(onPick){
+  document.querySelectorAll('.choice').forEach(btn=>{
+    btn.addEventListener('click', ()=> onPick(btn.dataset.v));
+  });
+  bindBack();
+}
+
+function showFbRedirectStep(url){
+  document.getElementById('stepContainer').innerHTML = `<div class="thankyou">
+    <div class="stampmark">SENT</div>
+    <h3>Opening our study &amp; exam-prep Facebook page…</h3>
+    <p style="color:var(--slate);">This is a separate Page from our hiring account, dedicated to Japanese-language and Prometric exam preparation. If it didn't open automatically, <a href="${url}" target="_blank" rel="noopener" style="color:var(--green); font-weight:600;">tap here</a>.</p>
+  </div>`;
+}
+
+function showThankYou(msg, offerHiringFb){
+  const fbHtml = offerHiringFb
+    ? `<p style="margin-top:18px;"><a href="${CONFIG.facebookHiringUrl}" target="_blank" rel="noopener" class="btn ghost">Questions? Message our hiring team</a></p>`
+    : '';
+  document.getElementById('stepContainer').innerHTML = `<div class="thankyou">
+    <div class="stampmark">NOTED</div>
+    <h3>Thank you</h3>
+    <p style="color:var(--slate); max-width:44ch; margin:0 auto;">${msg}</p>
+    ${fbHtml}
+  </div>`;
+}
+
+async function fileToBase64(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = ()=> resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function submitStudyLead(){
+  const name = document.getElementById('leadName').value.trim();
+  const email = document.getElementById('leadEmail').value.trim();
+  const msgBox = document.getElementById('leadMsg');
+  const btn = document.getElementById('leadContinueBtn');
+
+  if(!email || !email.includes('@')){
+    msgBox.innerHTML = `<div class="error-msg">Please enter a valid email address.</div>`;
+    return;
+  }
+
+  btn.disabled = true;
+  msgBox.innerHTML = `<div class="progress-msg">Saving your details…</div>`;
+
+  if(!CONFIG.webAppUrl.startsWith("PASTE_")){
+    try{
+      await fetch(CONFIG.webAppUrl, {
+        method:'POST',
+        headers:{ 'Content-Type':'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          action:'logStudyLead',
+          category: state.category,
+          combo: state.combo ? state.combo.key : null,
+          studyNeed: state.studyNeed,
+          name, email
+        })
+      });
+    }catch(err){
+      // Don't block the redirect if logging fails — we still want them to reach Messenger.
+      console.warn('Could not log study lead:', err);
+    }
+  }
+
+  window.location.href = CONFIG.facebookStudyUrl;
+  showFbRedirectStep(CONFIG.facebookStudyUrl);
+}
+
+async function submitApplication(){
+  const name = document.getElementById('fName').value.trim();
+  const email = document.getElementById('fEmail').value.trim();
+  const job = document.getElementById('fJob').value.trim();
+  const msgBox = document.getElementById('submitMsg');
+  const missing = state._uploads.filter(u=>!state.files[u.key]);
+
+  if(!name || !email || !job){
+    msgBox.innerHTML = `<div class="error-msg">Please fill in your name, email, and desired job category.</div>`;
+    return;
+  }
+  if(missing.length){
+    msgBox.innerHTML = `<div class="error-msg">Please upload: ${missing.map(m=>m.label).join(', ')}.</div>`;
+    return;
+  }
+  if(CONFIG.webAppUrl.startsWith("PASTE_")){
+    msgBox.innerHTML = `<div class="error-msg">This form isn't connected to a database yet. Add your Apps Script Web App URL in CONFIG.</div>`;
+    return;
+  }
+
+  const submitBtn = document.getElementById('submitBtn');
+  submitBtn.disabled = true;
+  msgBox.innerHTML = `<div class="progress-msg">Uploading your documents…</div>`;
+
+  try{
+    const filesPayload = {};
+    for(const u of state._uploads){
+      const f = state.files[u.key];
+      filesPayload[u.key] = { name: f.name, mimeType: f.type || 'application/octet-stream', data: await fileToBase64(f) };
+    }
+    const payload = {
+      action: 'submitApplication',
+      category: state.category,
+      combo: state.combo ? state.combo.key : null,
+      skillChange: state.skillChange,
+      jlptLevel: state.jlptLevel,
+      name, email, job,
+      files: filesPayload
+    };
+    const res = await fetch(CONFIG.webAppUrl, {
+      method:'POST',
+      headers:{ 'Content-Type':'text/plain;charset=utf-8' }, // avoids CORS preflight on Apps Script
+      body: JSON.stringify(payload)
+    });
+    const result = await res.json();
+    if(result.status === 'ok'){
+      showThankYou("Your application and documents were received. We'll review everything and contact you by email soon.", true);
+    } else {
+      throw new Error(result.message || 'Unknown error');
+    }
+  }catch(err){
+    submitBtn.disabled = false;
+    msgBox.innerHTML = `<div class="error-msg">Something went wrong sending your application (${escapeHtml(err.message)}). Please try again, or email us directly at ${CONFIG.email}.</div>`;
+  }
+}
+
+function renderStep(name){ steps[name](); }
+goStep('category');
+</script>
+</body>
+</html>
