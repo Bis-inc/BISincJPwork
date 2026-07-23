@@ -75,7 +75,7 @@
   .nav{display:flex; align-items:center; justify-content:space-between; padding:16px 24px; max-width:1080px; margin:0 auto;}
   .brand{display:flex; align-items:center; gap:12px; text-decoration:none;}
   .brand img{height:44px; width:auto; max-width:150px; object-fit:contain; display:block;}
-  .brand-name{font-family:var(--serif); font-weight:700; font-size:1.15rem; color:var(--ink);}
+  .brand-name{font-family:var(--sans); font-weight:700; font-size:1.15rem; color:var(--ink);}
   .nav-links{display:flex; gap:28px; font-size:.92rem; font-weight:500;}
   .nav-links a{text-decoration:none; color:var(--charcoal); border-bottom:2px solid transparent; padding-bottom:3px;}
   .nav-links a:hover{border-color:var(--green);}
@@ -129,7 +129,7 @@
   @media(min-width:980px){.industries-grid{grid-template-columns:repeat(3,1fr);}}
   .industry-card{background:var(--card); border:1px solid var(--line); border-radius:6px; padding:18px 20px; display:flex; gap:12px; align-items:flex-start;}
   .industry-card .dot{width:9px; height:9px; border-radius:50%; background:var(--green); margin-top:7px; flex-shrink:0;}
-  .industry-card h4{font-family:var(--serif); color:var(--ink); font-size:1rem; margin:0 0 4px;}
+  .industry-card h4{font-family:var(--sans); font-weight:600; color:var(--ink); font-size:1rem; margin:0 0 4px;}
   .industry-card p{color:var(--slate); font-size:.86rem; margin:0;}
 
   .flow{background:var(--paper);}
@@ -158,7 +158,7 @@
   .post .media img, .post .media video{width:100%; height:100%; object-fit:cover;}
   .post-body{padding:18px 20px 22px; flex:1; display:flex; flex-direction:column;}
   .post-date{font-family:var(--mono); font-size:.7rem; color:var(--green); letter-spacing:.06em; text-transform:uppercase; margin-bottom:8px;}
-  .post h4{font-family:var(--serif); font-size:1.08rem; color:var(--ink); margin:0 0 8px;}
+  .post h4{font-family:var(--sans); font-weight:700; font-size:1.08rem; color:var(--ink); margin:0 0 8px;}
   .post p{color:var(--slate); font-size:.9rem; margin:0; flex:1;}
   .bulletin-empty, .bulletin-error{color:var(--slate); font-size:.92rem; padding:30px; border:1px dashed var(--line); border-radius:6px; text-align:center;}
 
@@ -187,7 +187,7 @@
   }
   .choice:hover{border-color:var(--ink);}
   .choice:focus-visible{outline:3px solid var(--green); outline-offset:2px;}
-  .choice strong{display:block; color:var(--ink); font-family:var(--serif); font-size:1.02rem; margin-bottom:3px;}
+  .choice strong{display:block; color:var(--ink); font-family:var(--sans); font-weight:700; font-size:1.02rem; margin-bottom:3px;}
   .choice span{color:var(--slate); font-size:.86rem;}
   .step-actions{display:flex; justify-content:space-between; margin-top:26px; gap:12px;}
   .field{margin-bottom:18px;}
@@ -209,7 +209,7 @@
   .thankyou .stampmark{
     width:86px; height:86px; border-radius:50%; border:3px solid var(--green); color:var(--green);
     display:flex; align-items:center; justify-content:center; margin:0 auto 20px; transform:rotate(-8deg);
-    font-family:var(--serif); font-weight:700; font-size:.95rem;
+    font-family:var(--mono); font-weight:700; font-size:.85rem; letter-spacing:.05em;
   }
   .error-msg{color:var(--seal-dark); font-size:.85rem; margin-top:10px;}
   .progress-msg{font-size:.85rem; color:var(--slate); margin-top:12px; font-family:var(--mono);}
@@ -256,7 +256,7 @@
       <div>
         <div class="eyebrow">TITP &amp; SSW placement</div>
         <h1 id="heroHeadline">Your route to work in Japan, mapped out step by step.</h1>
-        <p class="lead" id="heroLead">Whether this is your first application or you're renewing under SSW, answer a few questions and we'll show you exactly what's needed next — no paperwork guesswork.</p>
+        <p class="lead" id="heroLead">Whether this is your first application or you're renewing under SSW, answer a few questions and we'll show you exactly what's needed next,no paperwork guesswork.</p>
         <div class="hero-actions">
           <a href="#apply" class="btn seal">Check what I need &rarr;</a>
           <a href="#bulletin" class="btn ghost">See latest updates</a>
@@ -367,9 +367,9 @@
    this file needs to change for basic setup.
    ================================================================ */
 const CONFIG = {
-  businessName: "BIS Inc JpWork",
-  // Put your logo file in the same folder as this index.html and
-  // put its filename here (e.g. "logo.jpg" or "logo.png").
+  businessName: "BIS Inc.JPwork",
+  // Logo file in the same folder as this index.html and
+  // Logo filename here (e.g. "logo.jpg" or "logo.png").
   logoUrl: "logo.jpg",
   heroHeadline: "Your route to work in Japan, mapped out step by step.",
   heroLead: "Whether this is your first application or you're renewing under SSW, answer a few questions and we'll show you exactly what's needed next.",
@@ -378,9 +378,9 @@ const CONFIG = {
   // Each item in this array becomes its own paragraph. Add or remove
   // items freely — the page will lay them out automatically.
   aboutIntro: [
-    "Nationwide Industry Support: We are a professional Registered Support Organization specializing in bringing Specified Skilled Workers from the Philippines to Japan. We provide reliable, nationwide support for essential industries, including linen supply, food service, food and beverage manufacturing, nursing care, construction, manufacturing, and auto repair.",
-    "Deep, Trusting Connections: We build strong, meaningful relationships with our foreign talent and local sending agencies in the Philippines, ensuring a stable and worry-free hiring process.",
-    "Commitment to Your Growth: Going beyond standard support, we are deeply dedicated to strengthening your production capacity and contributing to your long-term success."
+    "NATIONWIDE INDUSTRY SUPPORT: We are a professional Registered Support Organization specializing in bringing Specified Skilled Workers from the Philippines to Japan. We provide reliable, nationwide support for essential industries, including linen supply, food service, food and beverage manufacturing, nursing care, construction, manufacturing, and auto repair.",
+    "DEEP, TRUSTING CONNECTIONS: We build strong, meaningful relationships with our foreign talent and local sending agencies in the Philippines, ensuring a stable and worry-free hiring process.",
+    "COMMITMENT TO YOUR GROWTH: Going beyond standard support, we are deeply dedicated to strengthening your production capacity and contributing to your long-term success."
   ],
 
   // Industries section — edit names/descriptions freely, add or remove rows.
@@ -396,13 +396,13 @@ const CONFIG = {
     { name: "Agriculture", desc: "Agriculture" },
     { name: "Accommodation industry", desc: "Accommodation industry" }
   ],
-  requirementsNote: "The application process and required documentation for accepting foreign workers with specified skills vary by industry. To ensure clear expectations, please carefully review our application process.",
+  requirementsNote: "When accepting foreign workers with specified skills, the application process and required information vary depending on the industry.",
 
   // Job Application Flow — shown as a numbered list before the "Apply" wizard.
   // Each step needs a title and either "desc" (a short paragraph) or
   // "list" (an ordered list of smaller actions), not both.
   applicationFlow: [
-    { title: "FB Manpower Ads and Posts", desc: "When we need additional staff, we post recruitment ads on Facebook and Instagram. The requesting company sets all applicant qualifications. " },
+    { title: "FB Manpower Ads and Posts", desc: "Whenever there is a need for manpower, we create hiring ads and post them on Facebook and Instagram." },
     { title: "Receive Applicant Queries", desc: "An applicant sends a message via Facebook Messenger inquiring about our job postings." },
     { title: "Verification of Desired Skills and Qualifications", desc: "We review applicants' documents (including JLPT, JFT, Prometric, and other required certificates) to align their qualifications with their desired job category. Qualified applicants are instructed to download and connect with us via the Google Chat app." },
     { title: "Interview Scheduling and Candidate Profiling", list: [
@@ -475,7 +475,7 @@ document.getElementById('footerText').innerHTML = "&copy; " + new Date().getFull
 async function loadBulletin(){
   const grid = document.getElementById('bulletinGrid');
   if(CONFIG.bulletinSheetId.startsWith("PASTE_")){
-    grid.innerHTML = '<div class="bulletin-empty">Bulletin isn\'t connected yet — add your Google Sheet ID in CONFIG.</div>';
+    grid.innerHTML = '<div class="bulletin-empty">Bulletin isn't connected yet — add your Google Sheet ID in CONFIG.</div>';
     return;
   }
   const url = `https://docs.google.com/spreadsheets/d/${CONFIG.bulletinSheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(CONFIG.bulletinTabName)}`;
