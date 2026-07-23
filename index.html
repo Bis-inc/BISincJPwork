@@ -503,8 +503,11 @@ async function loadBulletin(){
       let mediaHtml = '';
       if(i.mediaType === 'video' && i.mediaUrl){
         const yt = toYouTubeEmbed(i.mediaUrl);
+        const drive = !yt ? toDriveEmbed(i.mediaUrl) : null;
         mediaHtml = yt
           ? `<div class="media"><iframe width="100%" height="100%" src="${yt}" frameborder="0" allowfullscreen></iframe></div>`
+          : drive
+          ? `<div class="media"><iframe width="100%" height="100%" src="${drive}" frameborder="0" allow="autoplay" allowfullscreen></iframe></div>`
           : `<div class="media"><video src="${escapeAttr(i.mediaUrl)}" controls></video></div>`;
       } else if(i.mediaType === 'image' && i.mediaUrl){
         mediaHtml = `<div class="media"><img src="${escapeAttr(driveDirectLink(i.mediaUrl))}" alt="${escapeAttr(i.title)}" loading="lazy"></div>`;
@@ -529,6 +532,10 @@ function toYouTubeEmbed(url){
 function driveDirectLink(url){
   const m = url.match(/\/d\/([\w-]{10,})/) || url.match(/[?&]id=([\w-]{10,})/);
   return m ? `https://drive.google.com/uc?export=view&id=${m[1]}` : url;
+}
+function toDriveEmbed(url){
+  const m = url.match(/\/d\/([\w-]{10,})/) || url.match(/[?&]id=([\w-]{10,})/);
+  return m ? `https://drive.google.com/file/d/${m[1]}/preview` : null;
 }
 function escapeHtml(s){ return (s||'').toString().replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function escapeAttr(s){ return escapeHtml(s); }
