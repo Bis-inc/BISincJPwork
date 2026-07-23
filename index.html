@@ -427,7 +427,7 @@ const CONFIG = {
 
   // Google Sheet that stores the bulletin posts (Tab name: Bulletin)
   // Sheet must be shared as "Anyone with the link – Viewer"
-  bulletinSheetId: "https://script.google.com/macros/s/AKfycbyYO7T6NT2qsrlUEI8umPPBa4lz5JcYYfYUcKFXsBehMMBfSZzXogMAfqH5Sh-I-UZ8/exec",
+  bulletinSheetId: "1vxMTplzbtzW_BrenXv-N9IJsKV1Fi73krJralJSC-fM",
   bulletinTabName: "Bulletin",
 
   // Apps Script Web App URL (see Code.gs + SETUP_GUIDE.md) — used to
@@ -475,7 +475,7 @@ document.getElementById('footerText').innerHTML = "&copy; " + new Date().getFull
 async function loadBulletin(){
   const grid = document.getElementById('bulletinGrid');
   if(CONFIG.bulletinSheetId.startsWith("PASTE_")){
-    grid.innerHTML = '<div class="bulletin-empty">Bulletin isn't connected yet — add your Google Sheet ID in CONFIG.</div>';
+    grid.innerHTML = '<div class="bulletin-empty">Bulletin isn\'t connected yet — add your Google Sheet ID in CONFIG.</div>';
     return;
   }
   const url = `https://docs.google.com/spreadsheets/d/${CONFIG.bulletinSheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(CONFIG.bulletinTabName)}`;
