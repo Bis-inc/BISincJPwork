@@ -761,12 +761,27 @@ function bindChoices(onPick){
   bindBack();
 }
 
+function restartWizard(){
+  state.category = null;
+  state.combo = null;
+  state.skillChange = null;
+  state.jlptLevel = null;
+  state.willingStudy = null;
+  state.studyNeed = null;
+  state.files = {};
+  state.fields = {};
+  state._uploads = undefined;
+  goStep('category');
+}
+
 function showFbRedirectStep(url){
   document.getElementById('stepContainer').innerHTML = `<div class="thankyou">
     <div class="stampmark">SENT</div>
     <h3>Opening our study &amp; exam-prep Facebook page…</h3>
     <p style="color:var(--slate);">This is a separate Page from our hiring account, dedicated to Japanese-language and Prometric exam preparation. If it didn't open automatically, <a href="${url}" target="_blank" rel="noopener" style="color:var(--green); font-weight:600;">tap here</a>.</p>
+    <p style="margin-top:18px;"><button class="btn ghost" id="restartBtn1" type="button">&larr; Back to application screening</button></p>
   </div>`;
+  document.getElementById('restartBtn1').addEventListener('click', restartWizard);
 }
 
 function showThankYou(msg, offerHiringFb){
@@ -778,7 +793,9 @@ function showThankYou(msg, offerHiringFb){
     <h3>Thank you</h3>
     <p style="color:var(--slate); max-width:44ch; margin:0 auto;">${msg}</p>
     ${fbHtml}
+    <p style="margin-top:18px;"><button class="btn ghost" id="restartBtn2" type="button">&larr; Back to application screening</button></p>
   </div>`;
+  document.getElementById('restartBtn2').addEventListener('click', restartWizard);
 }
 
 async function fileToBase64(file){
