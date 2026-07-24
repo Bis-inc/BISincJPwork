@@ -9,7 +9,7 @@
 <style>
   /* ============================================================
      CONFIG-DRIVEN SITE — see the CONFIG block in the script tag
-     at the bottom of this file to set your business name, logo,
+     at the bottom of this file to set business name, logo,
      contact info, Google Sheet ID and Apps Script Web App URL.
      ============================================================ */
 
@@ -159,7 +159,12 @@
   .post-body{padding:18px 20px 22px; flex:1; display:flex; flex-direction:column;}
   .post-date{font-family:var(--mono); font-size:.7rem; color:var(--green); letter-spacing:.06em; text-transform:uppercase; margin-bottom:8px;}
   .post h4{font-family:var(--sans); font-weight:700; font-size:1.08rem; color:var(--ink); margin:0 0 8px;}
-  .post p{color:var(--slate); font-size:.9rem; margin:0; flex:1;}
+  .post-text{flex:1;}
+  .post p{color:var(--slate); font-size:.9rem; margin:0 0 .75em 0;}
+  .post p:last-child{margin-bottom:0;}
+  .post ul{color:var(--slate); font-size:.9rem; margin:0 0 .75em 0; padding-left:1.2em;}
+  .post ul:last-child{margin-bottom:0;}
+  .post ul li{margin-bottom:4px;}
   .bulletin-empty, .bulletin-error{color:var(--slate); font-size:.92rem; padding:30px; border:1px dashed var(--line); border-radius:6px; text-align:center;}
 
   /* ---------- Wizard ---------- */
@@ -224,6 +229,12 @@
   .contact-card a, .contact-card p{color:#fff; text-decoration:none; font-size:.98rem;}
   .contact-card .row{display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid rgba(255,255,255,.1); font-size:.92rem;}
   .contact-card .row:last-child{border-bottom:none;}
+  .office-hours{margin-top:36px; padding-top:28px; border-top:1px solid rgba(255,255,255,.14);}
+  .office-hours h4{font-family:var(--mono); font-size:.75rem; letter-spacing:.08em; text-transform:uppercase; color:#C9D6E5; margin:0 0 14px;}
+  .hours-rows{display:grid; gap:2px; max-width:420px;}
+  .hours-row{display:flex; justify-content:space-between; gap:16px; font-size:.92rem; color:#fff; padding:9px 0; border-bottom:1px solid rgba(255,255,255,.1);}
+  .hours-row:last-child{border-bottom:none;}
+  .hours-row .days{color:#C9D6E5;}
   footer{background:#16283F; color:#9FB0C4; padding:26px 0; font-size:.82rem; text-align:center;}
   footer a{color:#C9D6E5;}
 </style>
@@ -352,6 +363,10 @@
           </div>
         </div>
       </div>
+      <div class="office-hours">
+        <h4>Office Hours</h4>
+        <div class="hours-rows" id="hoursRows"></div>
+      </div>
     </div>
   </section>
 
@@ -371,7 +386,7 @@ const CONFIG = {
   // Logo file in the same folder as this index.html and
   // Logo filename here (e.g. "logo.jpg" or "logo.png").
   logoUrl: "logo.jpg",
-  heroHeadline: "Your route to work in Japan, mapped out step by step.",
+  heroHeadline: "Your successful route to work in Japan, mapped out step by step.",
   heroLead: "Whether this is your first application or you're renewing under SSW, answer a few questions and we'll show you exactly what's needed next.",
 
   aboutHeadline: "Company Introduction",
@@ -421,6 +436,12 @@ const CONFIG = {
   email: "bisjpwork@gmail.com",
   phone: "+81 83-294-4949",
   address: "Shimonoseki-Shi Yamaguchi-Ken, Japan",
+  // Shown in the "Office Hours" block near the bottom of the site.
+  // Add, remove, or reword rows freely.
+  officeHours: [
+    { days: "Monday – Friday", hours: "9:00 AM – 6:00 PM (JST)" },
+    { days: "Saturday, Sunday & Japan Holidays", hours: "Closed" }
+  ],
   // Two separate Facebook Pages/Messenger accounts:
   facebookStudyUrl: "https://www.facebook.com/profile.php?id=61574251959067",     // Japanese-language & Prometric exam prep
   facebookHiringUrl: "https://www.facebook.com/BISIncJPwork/",   // hiring / job application inquiries
@@ -461,6 +482,9 @@ document.getElementById('contactEmail').href = "mailto:" + CONFIG.email;
 document.getElementById('contactPhone').textContent = CONFIG.phone;
 document.getElementById('contactPhone').href = "tel:" + CONFIG.phone.replace(/\s+/g,'');
 document.getElementById('contactAddress').textContent = CONFIG.address;
+document.getElementById('hoursRows').innerHTML = CONFIG.officeHours.map(h =>
+  `<div class="hours-row"><span class="days">${escapeHtml(h.days)}</span><span>${escapeHtml(h.hours)}</span></div>`
+).join('');
 document.getElementById('fbHiringLink').href = CONFIG.facebookHiringUrl;
 document.getElementById('fbStudyLink').href = CONFIG.facebookStudyUrl;
 document.getElementById('footerText').innerHTML = "&copy; " + new Date().getFullYear() + " " + CONFIG.businessName + " · " +
@@ -500,24 +524,13 @@ async function loadBulletin(){
     }).filter(i=>i.title).reverse();
 
     grid.innerHTML = items.map(i=>{
-      let mediaHtml = '';
-      if(i.mediaType === 'video' && i.mediaUrl){
-        const yt = toYouTubeEmbed(i.mediaUrl);
-        const drive = !yt ? toDriveEmbed(i.mediaUrl) : null;
-        mediaHtml = yt
-          ? `<div class="media"><iframe width="100%" height="100%" src="${yt}" frameborder="0" allowfullscreen></iframe></div>`
-          : drive
-          ? `<div class="media"><iframe width="100%" height="100%" src="${drive}" frameborder="0" allow="autoplay" allowfullscreen></iframe></div>`
-          : `<div class="media"><video src="${escapeAttr(i.mediaUrl)}" controls></video></div>`;
-      } else if(i.mediaType === 'image' && i.mediaUrl){
-        mediaHtml = `<div class="media"><img src="${escapeAttr(driveDirectLink(i.mediaUrl))}" alt="${escapeAttr(i.title)}" loading="lazy"></div>`;
-      }
+      const mediaHtml = buildMediaHtml(i);
       return `<article class="post">
         ${mediaHtml}
         <div class="post-body">
           <div class="post-date">${escapeHtml(i.date)}</div>
           <h4>${escapeHtml(i.title)}</h4>
-          <p>${escapeHtml(i.text)}</p>
+          <div class="post-text">${formatBulletinText(i.text)}</div>
         </div>
       </article>`;
     }).join('');
@@ -525,17 +538,80 @@ async function loadBulletin(){
     grid.innerHTML = '<div class="bulletin-error">Couldn\'t load updates right now. Please refresh, or check that the Google Sheet is shared as "Anyone with the link – Viewer".</div>';
   }
 }
+
+function buildMediaHtml(i){
+  if(!i.mediaUrl) return '';
+  const type = i.mediaType;
+  const driveId = getDriveFileId(i.mediaUrl);
+
+  if(type === 'video'){
+    const yt = toYouTubeEmbed(i.mediaUrl);
+    if(yt) return `<div class="media"><iframe width="100%" height="100%" src="${yt}" frameborder="0" allowfullscreen></iframe></div>`;
+    if(driveId) return `<div class="media"><iframe width="100%" height="100%" src="https://drive.google.com/file/d/${driveId}/preview" frameborder="0" allow="autoplay" allowfullscreen></iframe></div>`;
+    return `<div class="media"><video src="${escapeAttr(i.mediaUrl)}" controls></video></div>`;
+  }
+  if(type === 'image'){
+    if(driveId) return `<div class="media"><img src="https://drive.google.com/thumbnail?id=${driveId}&sz=w2000" alt="${escapeAttr(i.title)}" loading="lazy"></div>`;
+    return `<div class="media"><img src="${escapeAttr(i.mediaUrl)}" alt="${escapeAttr(i.title)}" loading="lazy"></div>`;
+  }
+  if(type === 'pdf'){
+    if(driveId) return `<div class="media"><iframe width="100%" height="100%" src="https://drive.google.com/file/d/${driveId}/preview" frameborder="0"></iframe></div>`;
+    return `<div class="media" style="display:flex; align-items:center; justify-content:center;"><a href="${escapeAttr(i.mediaUrl)}" target="_blank" rel="noopener" class="btn ghost">Open PDF</a></div>`;
+  }
+  if(type === 'link'){
+    return `<div class="media" style="display:flex; align-items:center; justify-content:center; background:var(--paper-alt);"><a href="${escapeAttr(i.mediaUrl)}" target="_blank" rel="noopener" class="btn seal">Open link &rarr;</a></div>`;
+  }
+  return '';
+}
+
+function getDriveFileId(url){
+  const m = url.match(/\/d\/([\w-]{10,})/) || url.match(/[?&]id=([\w-]{10,})/);
+  return m ? m[1] : null;
+}
+
+// Turns plain staff-typed text into readable HTML:
+// - a blank line between lines starts a new paragraph
+// - a line starting with "- " or "* " becomes a bullet list item
+function formatBulletinText(raw){
+  const text = (raw || '').toString().replace(/\r\n/g, '\n');
+  const lines = text.split('\n');
+  let html = '';
+  let inList = false;
+  let paraLines = [];
+
+  function flushPara(){
+    if(paraLines.length){
+      html += `<p>${paraLines.map(escapeHtml).join('<br>')}</p>`;
+      paraLines = [];
+    }
+  }
+  function closeListIfOpen(){
+    if(inList){ html += '</ul>'; inList = false; }
+  }
+
+  lines.forEach(line=>{
+    const trimmed = line.trim();
+    const isBullet = /^[-*]\s+/.test(trimmed);
+    if(isBullet){
+      flushPara();
+      if(!inList){ html += '<ul>'; inList = true; }
+      html += `<li>${escapeHtml(trimmed.replace(/^[-*]\s+/, ''))}</li>`;
+    } else if(trimmed === ''){
+      flushPara();
+      closeListIfOpen();
+    } else {
+      closeListIfOpen();
+      paraLines.push(trimmed);
+    }
+  });
+  flushPara();
+  closeListIfOpen();
+  return html || '<p></p>';
+}
+
 function toYouTubeEmbed(url){
   const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([\w-]{6,})/);
   return m ? `https://www.youtube.com/embed/${m[1]}` : null;
-}
-function driveDirectLink(url){
-  const m = url.match(/\/d\/([\w-]{10,})/) || url.match(/[?&]id=([\w-]{10,})/);
-  return m ? `https://drive.google.com/uc?export=view&id=${m[1]}` : url;
-}
-function toDriveEmbed(url){
-  const m = url.match(/\/d\/([\w-]{10,})/) || url.match(/[?&]id=([\w-]{10,})/);
-  return m ? `https://drive.google.com/file/d/${m[1]}/preview` : null;
 }
 function escapeHtml(s){ return (s||'').toString().replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function escapeAttr(s){ return escapeHtml(s); }
@@ -546,7 +622,7 @@ loadBulletin();
    Implements the 12-path screening tree:
    Category A: first-time applicant   (4 certificate combinations)
    Category B: ex-TITP intern, 1 yr   (4 certificate combinations)
-   Category C: ex-TITP intern, 3 yrs -> moving to SSW (2 skill paths)
+   Category C: ex-TITP intern, 3 - 5yrs -> moving to SSW (2 skill paths)
    Category D: current SSW, changing company (2 skill paths)
    ================================================================ */
 const CERT_COMBOS = [
@@ -556,7 +632,23 @@ const CERT_COMBOS = [
   { key:'none_prom',   jlpt:false, prometric:true,  label:'No JLPT N4/JFT, With Prometric certificate', desc:'You have a skill test certificate but no language certificate yet.' },
 ];
 
-const state = { category:null, combo:null, skillChange:null, jlptLevel:null, willingStudy:null, files:{}, fields:{} };
+const state = {
+  location:null, visaType:null, category:null, combo:null, skillChange:null,
+  jlptLevel:null, willingStudy:null, skillCategory:null, files:{}, fields:{}
+};
+
+// "combo" family = location+visaType/category already tells us they either
+// have both certs or need to study (4 total steps). Everyone else goes
+// through the same/transfer-skill + JLPT-level path (5 total steps).
+function isComboFamily(){
+  if(state.location === 'Japan') return state.visaType === 'TITP1';
+  return state.category === 'A' || state.category === 'B';
+}
+function wizardTotal(){ return isComboFamily() ? 4 : 5; }
+
+function skillCategoryOptionsHtml(){
+  return CONFIG.industries.map(ind => `<option value="${escapeAttr(ind.name)}">${escapeAttr(ind.name)}</option>`).join('');
+}
 
 function renderTrail(activeIndex, total){
   const trail = document.getElementById('trail');
@@ -590,21 +682,72 @@ function goStep(name){
 
 const steps = {
 
-  category(){
-    renderTrail(0, 3);
-    document.getElementById('stepContainer').innerHTML = stepShell('Step 1 of 3', 'Which best describes you?', `
+  location(){
+    renderTrail(0, 4);
+    document.getElementById('stepContainer').innerHTML = stepShell('Step 1', 'Where are you currently located?', `
+      <div class="field">
+        <label for="locSel">Current location</label>
+        <select id="locSel">
+          <option value="">Select one…</option>
+          <option value="Japan">I am in Japan now</option>
+          <option value="Philippines">I am in the Philippines now</option>
+        </select>
+      </div>
+      <div class="step-actions"><span></span><button class="btn seal" id="nextBtn">Continue &rarr;</button></div>`);
+    document.getElementById('nextBtn').addEventListener('click', ()=>{
+      const val = document.getElementById('locSel').value;
+      if(!val) return;
+      state.location = val;
+      goStep(val === 'Japan' ? 'visaType' : 'phCategory');
+    });
+  },
+
+  visaType(){
+    renderTrail(1, 4);
+    document.getElementById('stepContainer').innerHTML = stepShell('Step 2', 'What is your current visa type?', `
+      <div class="note-box">Applicants already in Japan usually have a shorter processing time.</div>
+      <div class="field">
+        <label for="visaSel">Visa type</label>
+        <select id="visaSel">
+          <option value="">Select one…</option>
+          <option value="TITP1">TITP 1 Year</option>
+          <option value="TITP3">TITP 3 Years</option>
+          <option value="TITP5">TITP 5 Years</option>
+          <option value="SSW1">SSW1</option>
+          <option value="SSW2">SSW2</option>
+        </select>
+      </div>
+      <div class="step-actions">${backLink()}<button class="btn seal" id="nextBtn">Continue &rarr;</button></div>`);
+    bindBack();
+    document.getElementById('nextBtn').addEventListener('click', ()=>{
+      const val = document.getElementById('visaSel').value;
+      if(!val) return;
+      state.visaType = val;
+      goStep(val === 'TITP1' ? 'combo' : 'skillChange');
+    });
+  },
+
+  phCategory(){
+    renderTrail(1, 4);
+    document.getElementById('stepContainer').innerHTML = stepShell('Step 2', 'Which best describes you?', `
       <div class="choice-grid">
         <button class="choice" data-v="A"><strong>First-time applicant</strong><span>No prior work experience in Japan</span></button>
         <button class="choice" data-v="B"><strong>Former TITP intern — 1 year in Japan</strong><span>Completed roughly one year as a technical intern trainee</span></button>
-        <button class="choice" data-v="C"><strong>Former TITP intern — 3 years, moving to SSW</strong><span>Completed a full TITP term and want to move to Specified Skilled Worker status</span></button>
+        <button class="choice" data-v="C3"><strong>Former TITP intern — 3 years, moving to SSW</strong><span>Completed a full TITP term and want to move to Specified Skilled Worker status</span></button>
+        <button class="choice" data-v="C5"><strong>Former TITP intern — 5 years, moving to SSW</strong><span>Completed an extended TITP term and want to move to Specified Skilled Worker status</span></button>
         <button class="choice" data-v="D"><strong>Currently SSW, changing company</strong><span>Already working under SSW and looking to transfer employer</span></button>
-      </div>`);
-    bindChoices(v=>{ state.category=v; goStep(v==='A'||v==='B' ? 'combo' : 'skillChange'); });
+      </div>
+      ${backBtn()}`);
+    bindChoices(v=>{
+      state.category = v;
+      goStep((v==='A'||v==='B') ? 'combo' : 'skillChange');
+    });
   },
 
   combo(){
-    renderTrail(1, 3);
-    document.getElementById('stepContainer').innerHTML = stepShell('Step 2 of 3', 'Which certificates do you already have?', `
+    const total = wizardTotal();
+    renderTrail(2, total);
+    document.getElementById('stepContainer').innerHTML = stepShell(`Step 3 of ${total}`, 'Which certificates do you already have?', `
       <div class="choice-grid">
         ${CERT_COMBOS.map(c=>`<button class="choice" data-v="${c.key}"><strong>${c.label}</strong><span>${c.desc}</span></button>`).join('')}
       </div>
@@ -620,13 +763,14 @@ const steps = {
   },
 
   studyQuestion(){
-    renderTrail(2, 3);
+    const total = wizardTotal();
+    renderTrail(3, total);
     let need;
     if(!state.combo.jlpt && !state.combo.prometric) need = 'Japanese language lessons (JLPT/JFT) and Prometric skill-test preparation';
     else if(state.combo.jlpt && !state.combo.prometric) need = 'Prometric skill-test preparation';
     else need = 'Japanese language lessons (JLPT/JFT)';
     state.studyNeed = need;
-    document.getElementById('stepContainer').innerHTML = stepShell('Step 3 of 3', `Are you willing to study for ${need}?`, `
+    document.getElementById('stepContainer').innerHTML = stepShell(`Step ${total} of ${total}`, `Are you willing to study for ${need}?`, `
       <div class="note-box">Based on what you have, you'd need to complete ${need} before we can proceed with placement.</div>
       <div class="choice-grid">
         <button class="choice" data-v="yes"><strong>Yes, I'm willing to study</strong><span>We'll connect you with our team on Facebook Messenger to get started</span></button>
@@ -641,7 +785,8 @@ const steps = {
   },
 
   studyLeadEmail(){
-    renderTrail(2, 3);
+    const total = wizardTotal();
+    renderTrail(3, total);
     document.getElementById('stepContainer').innerHTML = stepShell('Before you go', `Leave your email so we can follow up`, `
       <div class="note-box">We'll open Facebook Messenger next — but in case you don't get a chance to message us there, leave your email and our team will personally follow up about enrolling in ${state.studyNeed}.</div>
       <div class="field"><label for="leadName">Full name</label><input type="text" id="leadName"></div>
@@ -652,10 +797,10 @@ const steps = {
     document.getElementById('leadContinueBtn').addEventListener('click', submitStudyLead);
   },
 
-
   skillChange(){
-    renderTrail(1, 4);
-    document.getElementById('stepContainer').innerHTML = stepShell('Step 2 of 4', 'Are you moving under the same skill category or a different one?', `
+    const total = wizardTotal();
+    renderTrail(2, total);
+    document.getElementById('stepContainer').innerHTML = stepShell(`Step 3 of ${total}`, 'Are you moving under the same skill category or a different one?', `
       <div class="choice-grid">
         <button class="choice" data-v="same"><strong>Same skill category</strong><span>Continuing in the same field of work</span></button>
         <button class="choice" data-v="different"><strong>Different skill category</strong><span>Moving into a new field of work</span></button>
@@ -665,8 +810,9 @@ const steps = {
   },
 
   jlptLevel(){
-    renderTrail(2, 4);
-    document.getElementById('stepContainer').innerHTML = stepShell('Step 3 of 4', 'What is your current Japanese-language qualification?', `
+    const total = wizardTotal();
+    renderTrail(3, total);
+    document.getElementById('stepContainer').innerHTML = stepShell(`Step 4 of ${total}`, 'What is your current Japanese-language qualification?', `
       <div class="field">
         <label for="jlptSel">Qualification level</label>
         <select id="jlptSel">
@@ -691,31 +837,37 @@ const steps = {
   },
 
   contactForm(){
-    const total = (state.category==='A'||state.category==='B') ? 3 : 4;
+    const total = wizardTotal();
     renderTrail(total-1, total);
 
-    // work out which upload fields this path needs
-    let uploads = [];
-    if(state.category==='A' || state.category==='B'){
+    const isJapan = state.location === 'Japan';
+    const isSSWFamily = (state.category === 'D') || (isJapan && (state.visaType==='SSW1' || state.visaType==='SSW2'));
+    const isJapanTitpTransferShort = isJapan && (state.visaType==='TITP3' || state.visaType==='TITP5') && state.skillChange==='different';
+
+    let uploads;
+    if(isComboFamily()){
       uploads = [
         {key:'jlptCert', label:'JLPT N4 / JFT certificate'},
-        {key:'prometricCert', label:'Prometric skill-test certificate'},
+        {key:'prometricCert', label:'Prometric skill-test certificate'}
       ];
-    } else if(state.category==='C'){
+    } else if(isJapanTitpTransferShort){
+      uploads = [
+        {key:'jlptCert', label:'JLPT / JFT certificate'},
+        {key:'prometricCert', label:'Prometric certificate for your new skill category'}
+      ];
+    } else if(state.skillChange === 'same'){
       uploads = [
         {key:'jlptCert', label:'JLPT / JFT certificate'},
         {key:'titpSkillCert', label:'TITP skill-test certificate'},
-        state.skillChange==='same'
-          ? {key:'titpCompletionCert', label:'TITP completion certificate'}
-          : {key:'prometricCert', label:'Prometric certificate for your new job category'}
-      ];
-    } else if(state.category==='D'){
-      uploads = [
-        {key:'jlptCert', label:'JLPT / JFT certificate'},
-        {key:'titpSkillCert', label:'TITP skill-test certificate'},
-        state.skillChange==='same'
+        isSSWFamily
           ? {key:'sswCurrentCert', label:'Current SSW skill certificate'}
-          : {key:'prometricCert', label:'Prometric certificate for your new job category'}
+          : {key:'titpCompletionCert', label:'TITP completion certificate'}
+      ];
+    } else {
+      uploads = [
+        {key:'jlptCert', label:'JLPT / JFT certificate'},
+        {key:'titpSkillCert', label:'TITP skill-test certificate'},
+        {key:'prometricCert', label:'Prometric certificate for your new skill category'}
       ];
     }
     state._uploads = uploads;
@@ -723,7 +875,17 @@ const steps = {
     document.getElementById('stepContainer').innerHTML = stepShell(`Step ${total} of ${total}`, 'Your details', `
       <div class="field"><label for="fName">Full name</label><input type="text" id="fName" required></div>
       <div class="field"><label for="fEmail">Email address</label><input type="email" id="fEmail" required></div>
-      <div class="field"><label for="fJob">Desired job category / skill</label><input type="text" id="fJob" placeholder="e.g. Caregiving, Construction, Food Manufacturing" required></div>
+      <div class="field">
+        <label for="fSkill">Desired skill category</label>
+        <select id="fSkill" required>
+          <option value="">Select one…</option>
+          ${skillCategoryOptionsHtml()}
+          <option value="__other__">Other (please specify)</option>
+        </select>
+        <div id="fSkillOtherWrap" style="display:none; margin-top:10px;">
+          <input type="text" id="fSkillOther" placeholder="Please specify">
+        </div>
+      </div>
       ${uploads.map(u=>`
         <div class="field">
           <label>${u.label}</label>
@@ -737,6 +899,9 @@ const steps = {
       <div id="submitMsg"></div>
     `);
     bindBack();
+    document.getElementById('fSkill').addEventListener('change', (e)=>{
+      document.getElementById('fSkillOtherWrap').style.display = e.target.value === '__other__' ? 'block' : 'none';
+    });
     uploads.forEach(u=>{
       document.getElementById(`up_${u.key}`).addEventListener('change', (e)=>{
         const f = e.target.files[0];
@@ -752,7 +917,7 @@ function backBtn(){ return `<div class="step-actions">${backLink()}<span></span>
 function backLink(){ return `<button class="btn ghost" id="backBtn" type="button">&larr; Back</button>`; }
 function bindBack(){
   const b = document.getElementById('backBtn');
-  if(b) b.addEventListener('click', ()=> goStep('category'));
+  if(b) b.addEventListener('click', restartWizard);
 }
 function bindChoices(onPick){
   document.querySelectorAll('.choice').forEach(btn=>{
@@ -762,16 +927,19 @@ function bindChoices(onPick){
 }
 
 function restartWizard(){
+  state.location = null;
+  state.visaType = null;
   state.category = null;
   state.combo = null;
   state.skillChange = null;
   state.jlptLevel = null;
   state.willingStudy = null;
   state.studyNeed = null;
+  state.skillCategory = null;
   state.files = {};
   state.fields = {};
   state._uploads = undefined;
-  goStep('category');
+  goStep('location');
 }
 
 function showFbRedirectStep(url){
@@ -828,6 +996,8 @@ async function submitStudyLead(){
         headers:{ 'Content-Type':'text/plain;charset=utf-8' },
         body: JSON.stringify({
           action:'logStudyLead',
+          location: state.location,
+          visaType: state.visaType,
           category: state.category,
           combo: state.combo ? state.combo.key : null,
           studyNeed: state.studyNeed,
@@ -847,12 +1017,14 @@ async function submitStudyLead(){
 async function submitApplication(){
   const name = document.getElementById('fName').value.trim();
   const email = document.getElementById('fEmail').value.trim();
-  const job = document.getElementById('fJob').value.trim();
+  const skillSel = document.getElementById('fSkill').value;
+  const skillOther = document.getElementById('fSkillOther') ? document.getElementById('fSkillOther').value.trim() : '';
+  const skillCategory = skillSel === '__other__' ? skillOther : skillSel;
   const msgBox = document.getElementById('submitMsg');
   const missing = state._uploads.filter(u=>!state.files[u.key]);
 
-  if(!name || !email || !job){
-    msgBox.innerHTML = `<div class="error-msg">Please fill in your name, email, and desired job category.</div>`;
+  if(!name || !email || !skillCategory){
+    msgBox.innerHTML = `<div class="error-msg">Please fill in your name, email, and desired skill category.</div>`;
     return;
   }
   if(missing.length){
@@ -876,11 +1048,13 @@ async function submitApplication(){
     }
     const payload = {
       action: 'submitApplication',
+      location: state.location,
+      visaType: state.visaType,
       category: state.category,
       combo: state.combo ? state.combo.key : null,
       skillChange: state.skillChange,
       jlptLevel: state.jlptLevel,
-      name, email, job,
+      name, email, skillCategory,
       files: filesPayload
     };
     const res = await fetch(CONFIG.webAppUrl, {
@@ -901,7 +1075,7 @@ async function submitApplication(){
 }
 
 function renderStep(name){ steps[name](); }
-goStep('category');
+goStep('location');
 </script>
 </body>
 </html>
