@@ -7,8 +7,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#1F3A5F; --paper:#F7F4EC; --card:#FFFFFF; --seal:#B33A3A; --seal-dark:#8F2E2E;
-    --charcoal:#262523; --slate:#63707A; --line:#D8D2C4;
+    --ink:#1F2A1A; --green:#7FA83E; --paper:#FAFBF6; --card:#FFFFFF; --seal:#DC000A; --seal-dark:#B10008;
+    --charcoal:#1A1A1A; --slate:#5C6455; --line:#DCE3D0;
     --serif:'Fraunces', Georgia, serif; --sans:'IBM Plex Sans', sans-serif; --mono:'IBM Plex Mono', monospace;
   }
   *{box-sizing:border-box;}
@@ -19,11 +19,12 @@
   .card{background:var(--card); border:1px solid var(--line); border-radius:8px; padding:28px;}
   .field{margin-bottom:18px;}
   label{display:block; font-family:var(--mono); font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; color:var(--slate); margin-bottom:7px;}
-  input[type=text], input[type=password], textarea{
+  input[type=text], input[type=password], input[type=url], textarea, select{
     width:100%; padding:12px 14px; border:1.5px solid var(--line); border-radius:5px; font-family:var(--sans);
     font-size:.95rem; background:var(--paper); color:var(--charcoal);
   }
-  textarea{min-height:100px; resize:vertical;}
+  textarea{min-height:120px; resize:vertical;}
+  .hint{font-size:.78rem; color:var(--slate); margin-top:6px; line-height:1.5;}
   .upload{border:1.5px dashed var(--line); border-radius:6px; padding:18px; text-align:center; cursor:pointer; background:var(--paper);}
   .upload input{display:none;}
   .fname{font-size:.82rem; color:var(--ink); margin-top:6px; font-family:var(--mono);}
@@ -53,14 +54,29 @@
     <div class="field">
       <label for="text">Details</label>
       <textarea id="text" placeholder="Write the update here…"></textarea>
+      <div class="hint">Tip: leave a blank line between paragraphs. Start a line with "- " to make a bullet point.</div>
     </div>
     <div class="field">
-      <label>Photo or video (optional)</label>
+      <label for="mediaType">Attachment (optional)</label>
+      <select id="mediaType">
+        <option value="none">No attachment</option>
+        <option value="image">Photo</option>
+        <option value="video">Video</option>
+        <option value="pdf">PDF</option>
+        <option value="link">Link (paste a URL instead of uploading)</option>
+      </select>
+    </div>
+    <div class="field" id="fileField">
+      <label>Upload file</label>
       <label class="upload" for="mediaFile">
-        <div>Tap to choose a photo or video</div>
+        <div>Tap to choose a file</div>
         <div class="fname" id="fname">No file selected</div>
       </label>
-      <input type="file" id="mediaFile" accept="image/*,video/*">
+      <input type="file" id="mediaFile">
+    </div>
+    <div class="field" id="linkField" style="display:none;">
+      <label for="linkUrl">Link URL</label>
+      <input type="url" id="linkUrl" placeholder="https://...">
     </div>
     <button class="btn" id="postBtn">Post update</button>
     <div class="msg" id="msg"></div>
@@ -71,7 +87,31 @@
 // Same Web App URL used by index.html's applicant form.
 const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyYO7T6NT2qsrlUEI8umPPBa4lz5JcYYfYUcKFXsBehMMBfSZzXogMAfqH5Sh-I-UZ8/exec";
 
-document.getElementById('mediaFile').addEventListener('change', e=>{
+const mediaTypeSel = document.getElementById('mediaType');
+const fileField = document.getElementById('fileField');
+const linkField = document.getElementById('linkField');
+const mediaFileInput = document.getElementById('mediaFile');
+
+function updateAcceptAndVisibility(){
+  const type = mediaTypeSel.value;
+  if(type === 'none'){
+    fileField.style.display = 'none';
+    linkField.style.display = 'none';
+  } else if(type === 'link'){
+    fileField.style.display = 'none';
+    linkField.style.display = 'block';
+  } else {
+    fileField.style.display = 'block';
+    linkField.style.display = 'none';
+    if(type === 'image') mediaFileInput.accept = 'image/*';
+    else if(type === 'video') mediaFileInput.accept = 'video/*';
+    else if(type === 'pdf') mediaFileInput.accept = '.pdf,application/pdf';
+  }
+}
+mediaTypeSel.addEventListener('change', updateAcceptAndVisibility);
+updateAcceptAndVisibility();
+
+mediaFileInput.addEventListener('change', e=>{
   const f = e.target.files[0];
   document.getElementById('fname').textContent = f ? f.name : 'No file selected';
 });
@@ -89,12 +129,22 @@ document.getElementById('postBtn').addEventListener('click', async ()=>{
   const pw = document.getElementById('pw').value;
   const title = document.getElementById('title').value.trim();
   const text = document.getElementById('text').value.trim();
-  const file = document.getElementById('mediaFile').files[0];
+  const type = mediaTypeSel.value;
+  const file = mediaFileInput.files[0];
+  const linkUrl = document.getElementById('linkUrl').value.trim();
   const msg = document.getElementById('msg');
   const btn = document.getElementById('postBtn');
 
   if(!pw || !title || !text){
     msg.className = 'msg err'; msg.textContent = 'Please fill in the password, title, and details.';
+    return;
+  }
+  if(type !== 'none' && type !== 'link' && !file){
+    msg.className = 'msg err'; msg.textContent = 'Please choose a file to upload, or set attachment to "No attachment".';
+    return;
+  }
+  if(type === 'link' && !linkUrl){
+    msg.className = 'msg err'; msg.textContent = 'Please paste a link URL, or set attachment to "No attachment".';
     return;
   }
   if(WEBAPP_URL.startsWith("PASTE_")){
@@ -107,12 +157,14 @@ document.getElementById('postBtn').addEventListener('click', async ()=>{
 
   try{
     const payload = { action:'postBulletin', password: pw, title, text, media: null };
-    if(file){
+    if(type === 'link'){
+      payload.media = { kind: 'link', url: linkUrl };
+    } else if(type !== 'none' && file){
       payload.media = {
         name: file.name,
         mimeType: file.type || 'application/octet-stream',
         data: await fileToBase64(file),
-        kind: file.type.startsWith('video') ? 'video' : 'image'
+        kind: type
       };
     }
     const res = await fetch(WEBAPP_URL, {
@@ -125,8 +177,11 @@ document.getElementById('postBtn').addEventListener('click', async ()=>{
       msg.className = 'msg ok'; msg.textContent = 'Posted! It will appear on the site right away.';
       document.getElementById('title').value = '';
       document.getElementById('text').value = '';
-      document.getElementById('mediaFile').value = '';
+      mediaFileInput.value = '';
+      document.getElementById('linkUrl').value = '';
       document.getElementById('fname').textContent = 'No file selected';
+      mediaTypeSel.value = 'none';
+      updateAcceptAndVisibility();
     } else {
       throw new Error(result.message || 'Unknown error');
     }
