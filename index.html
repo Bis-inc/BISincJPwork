@@ -632,6 +632,8 @@ const CERT_COMBOS = [
   { key:'none_prom',   jlpt:false, prometric:true,  label:'No JLPT N4/JFT, With Prometric certificate', desc:'You have a skill test certificate but no language certificate yet.' },
 ];
 
+const MAX_FILE_BYTES = 8 * 1024 * 1024; // 8MB per file, matches the backend limit
+
 const state = {
   location:null, visaType:null, category:null, combo:null, skillChange:null,
   jlptLevel:null, willingStudy:null, skillCategory:null, files:{}, fields:{}
@@ -791,6 +793,7 @@ const steps = {
       <div class="note-box">We'll open Facebook Messenger next — but in case you don't get a chance to message us there, leave your email and our team will personally follow up about enrolling in ${state.studyNeed}.</div>
       <div class="field"><label for="leadName">Full name</label><input type="text" id="leadName"></div>
       <div class="field"><label for="leadEmail">Email address</label><input type="email" id="leadEmail" required></div>
+      <input type="text" id="leadWebsite" name="website" style="position:absolute; left:-9999px;" tabindex="-1" autocomplete="off">
       <div class="step-actions">${backLink()}<button class="btn seal" id="leadContinueBtn">Continue to Messenger &rarr;</button></div>
       <div id="leadMsg"></div>`);
     bindBack();
@@ -875,6 +878,7 @@ const steps = {
     document.getElementById('stepContainer').innerHTML = stepShell(`Step ${total} of ${total}`, 'Your details', `
       <div class="field"><label for="fName">Full name</label><input type="text" id="fName" required></div>
       <div class="field"><label for="fEmail">Email address</label><input type="email" id="fEmail" required></div>
+      <input type="text" id="fWebsite" name="website" style="position:absolute; left:-9999px;" tabindex="-1" autocomplete="off">
       <div class="field">
         <label for="fSkill">Desired skill category</label>
         <select id="fSkill" required>
@@ -905,7 +909,16 @@ const steps = {
     uploads.forEach(u=>{
       document.getElementById(`up_${u.key}`).addEventListener('change', (e)=>{
         const f = e.target.files[0];
-        document.getElementById(`fname_${u.key}`).textContent = f ? f.name : 'No file selected';
+        const nameEl = document.getElementById(`fname_${u.key}`);
+        if(f && f.size > MAX_FILE_BYTES){
+          nameEl.textContent = 'That file is too large (max 8MB) — please choose a smaller photo.';
+          nameEl.style.color = 'var(--seal)';
+          e.target.value = '';
+          delete state.files[u.key];
+          return;
+        }
+        nameEl.style.color = '';
+        nameEl.textContent = f ? f.name : 'No file selected';
         if(f) state.files[u.key] = f;
       });
     });
@@ -996,6 +1009,7 @@ async function submitStudyLead(){
         headers:{ 'Content-Type':'text/plain;charset=utf-8' },
         body: JSON.stringify({
           action:'logStudyLead',
+          website: document.getElementById('leadWebsite') ? document.getElementById('leadWebsite').value : '',
           location: state.location,
           visaType: state.visaType,
           category: state.category,
@@ -1048,6 +1062,7 @@ async function submitApplication(){
     }
     const payload = {
       action: 'submitApplication',
+      website: document.getElementById('fWebsite') ? document.getElementById('fWebsite').value : '',
       location: state.location,
       visaType: state.visaType,
       category: state.category,
