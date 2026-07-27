@@ -111,8 +111,17 @@ function updateAcceptAndVisibility(){
 mediaTypeSel.addEventListener('change', updateAcceptAndVisibility);
 updateAcceptAndVisibility();
 
+const MAX_FILE_BYTES = 8 * 1024 * 1024; // 8MB, matches the backend limit
+
 mediaFileInput.addEventListener('change', e=>{
   const f = e.target.files[0];
+  if(f && f.size > MAX_FILE_BYTES){
+    document.getElementById('fname').textContent = 'That file is too large (max 8MB) — please choose a smaller file.';
+    document.getElementById('fname').style.color = 'var(--seal)';
+    e.target.value = '';
+    return;
+  }
+  document.getElementById('fname').style.color = '';
   document.getElementById('fname').textContent = f ? f.name : 'No file selected';
 });
 
