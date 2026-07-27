@@ -793,7 +793,7 @@ const steps = {
       <div class="note-box">We'll open Facebook Messenger next — but in case you don't get a chance to message us there, leave your email and our team will personally follow up about enrolling in ${state.studyNeed}.</div>
       <div class="field"><label for="leadName">Full name</label><input type="text" id="leadName"></div>
       <div class="field"><label for="leadEmail">Email address</label><input type="email" id="leadEmail" required></div>
-      <input type="text" id="leadWebsite" name="website" style="position:absolute; left:-9999px;" tabindex="-1" autocomplete="off">
+      <input type="text" id="leadHpCheck" name="bis_hp_9284" style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;" tabindex="-1" autocomplete="off" aria-hidden="true">
       <div class="step-actions">${backLink()}<button class="btn seal" id="leadContinueBtn">Continue to Messenger &rarr;</button></div>
       <div id="leadMsg"></div>`);
     bindBack();
@@ -878,7 +878,7 @@ const steps = {
     document.getElementById('stepContainer').innerHTML = stepShell(`Step ${total} of ${total}`, 'Your details', `
       <div class="field"><label for="fName">Full name</label><input type="text" id="fName" required></div>
       <div class="field"><label for="fEmail">Email address</label><input type="email" id="fEmail" required></div>
-      <input type="text" id="fWebsite" name="website" style="position:absolute; left:-9999px;" tabindex="-1" autocomplete="off">
+      <input type="text" id="fHpCheck" name="bis_hp_9284" style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;" tabindex="-1" autocomplete="off" aria-hidden="true">
       <div class="field">
         <label for="fSkill">Desired skill category</label>
         <select id="fSkill" required>
@@ -1009,7 +1009,7 @@ async function submitStudyLead(){
         headers:{ 'Content-Type':'text/plain;charset=utf-8' },
         body: JSON.stringify({
           action:'logStudyLead',
-          website: document.getElementById('leadWebsite') ? document.getElementById('leadWebsite').value : '',
+          hpCheck: document.getElementById('leadHpCheck') ? document.getElementById('leadHpCheck').value : '',
           location: state.location,
           visaType: state.visaType,
           category: state.category,
@@ -1062,7 +1062,7 @@ async function submitApplication(){
     }
     const payload = {
       action: 'submitApplication',
-      website: document.getElementById('fWebsite') ? document.getElementById('fWebsite').value : '',
+      hpCheck: document.getElementById('fHpCheck') ? document.getElementById('fHpCheck').value : '',
       location: state.location,
       visaType: state.visaType,
       category: state.category,
