@@ -737,7 +737,8 @@ const steps = {
         <button class="choice" data-v="B"><strong>Former TITP intern — 1 year in Japan</strong><span>Completed roughly one year as a technical intern trainee</span></button>
         <button class="choice" data-v="C3"><strong>Former TITP intern — 3 years, moving to SSW</strong><span>Completed a full TITP term and want to move to Specified Skilled Worker status</span></button>
         <button class="choice" data-v="C5"><strong>Former TITP intern — 5 years, moving to SSW</strong><span>Completed an extended TITP term and want to move to Specified Skilled Worker status</span></button>
-        <button class="choice" data-v="D"><strong>Currently SSW, changing company</strong><span>Already working under SSW and looking to transfer employer</span></button>
+        <button class="choice" data-v="D1"><strong>Currently SSW1, changing company</strong><span>Already working under SSW1 and looking to transfer employer</span></button>
+        <button class="choice" data-v="D2"><strong>Currently SSW2, changing company</strong><span>Already working under SSW2 and looking to transfer employer</span></button>
       </div>
       ${backBtn()}`);
     bindChoices(v=>{
@@ -844,7 +845,7 @@ const steps = {
     renderTrail(total-1, total);
 
     const isJapan = state.location === 'Japan';
-    const isSSWFamily = (state.category === 'D') || (isJapan && (state.visaType==='SSW1' || state.visaType==='SSW2'));
+    const isSSWFamily = (state.category === 'D1' || state.category === 'D2') || (isJapan && (state.visaType==='SSW1' || state.visaType==='SSW2'));
     const isJapanTitpTransferShort = isJapan && (state.visaType==='TITP3' || state.visaType==='TITP5') && state.skillChange==='different';
 
     let uploads;
