@@ -252,10 +252,10 @@
       <a href="#industries">Industries</a>
       <a href="#flow">How it works</a>
       <a href="#bulletin">Updates</a>
-      <a href="#apply">Apply</a>
+      <a href="#apply" id="navApplyLink">Apply</a>
       <a href="#contact">Contact</a>
     </div>
-    <a class="btn seal nav-cta" href="#apply">Start application</a>
+    <a class="btn seal nav-cta" href="#apply" id="navStartAppBtn">Start application</a>
   </nav>
 </header>
 
@@ -269,7 +269,7 @@
         <h1 id="heroHeadline">Your route to work in Japan, mapped out step by step.</h1>
         <p class="lead" id="heroLead">Whether this is your first application or you're renewing under SSW, answer a few questions and we'll show you exactly what's needed next,no paperwork guesswork.</p>
         <div class="hero-actions">
-          <a href="#apply" class="btn seal">Check what I need &rarr;</a>
+          <a href="#apply" class="btn seal" id="heroApplyLink">Check what I need &rarr;</a>
           <a href="#bulletin" class="btn ghost">See latest updates</a>
         </div>
       </div>
@@ -1089,6 +1089,15 @@ async function submitApplication(){
     msgBox.innerHTML = `<div class="error-msg">Something went wrong sending your application (${escapeHtml(err.message)}). Please try again, or email us directly at ${CONFIG.email}.</div>`;
   }
 }
+
+// Clicking "Apply" (nav link, header button, or hero button) should always
+// land on a fresh Step 1 — otherwise anyone who already finished one
+// application (or a staff member testing multiple scenarios) gets stuck
+// looking at their previous "Thank you" screen instead of a new form.
+['navApplyLink', 'navStartAppBtn', 'heroApplyLink'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('click', restartWizard);
+});
 
 function renderStep(name){ steps[name](); }
 goStep('location');
