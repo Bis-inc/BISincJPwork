@@ -636,17 +636,39 @@ const MAX_FILE_BYTES = 8 * 1024 * 1024; // 8MB per file, matches the backend lim
 
 const state = {
   location:null, visaType:null, category:null, combo:null, skillChange:null,
-  jlptLevel:null, willingStudy:null, skillCategory:null, files:{}, fields:{}
+  jlptLevel:null, willingStudy:null, skillCategory:null, otherPath:null,
+  otherTransition:false, files:{}, fields:{}
 };
 
 // "combo" family = location+visaType/category already tells us they either
 // have both certs or need to study (4 total steps). Everyone else goes
 // through the same/transfer-skill + JLPT-level path (5 total steps).
 function isComboFamily(){
+  if(state.otherTransition) return true;
   if(state.location === 'Japan') return state.visaType === 'TITP1';
   return state.category === 'A' || state.category === 'B';
 }
-function wizardTotal(){ return isComboFamily() ? 4 : 5; }
+function wizardTotal(){
+  if(state.otherTransition) return 6;
+  return isComboFamily() ? 4 : 5;
+}
+
+function getCategoryLabel(){
+  const isJapan = state.location === 'Japan';
+  const skillTag = state.skillChange ? (state.skillChange === 'same' ? ' (Same skill)' : ' (Different skill)') : '';
+  if(isJapan){
+    if(state.visaType === 'OTHER'){
+      return state.otherPath === 'profession'
+        ? 'Japan — Other visa — Apply per profession/visa'
+        : 'Japan — Other visa — Transition to SSW' + skillTag;
+    }
+    if(state.visaType === 'TITP1') return 'Japan — TITP 1';
+    return `Japan — ${state.visaType || ''}${skillTag}`;
+  }
+  const catNames = { A:'First-time applicant', B:'Former TITP 1', C2:'Former TITP 2', C3:'Former TITP 3', D1:'Currently SSW1', D2:'Currently SSW2' };
+  const base = catNames[state.category] || state.category || '';
+  return `Philippines — ${base}${skillTag}`;
+}
 
 function skillCategoryOptionsHtml(){
   return CONFIG.industries.map(ind => `<option value="${escapeAttr(ind.name)}">${escapeAttr(ind.name)}</option>`).join('');
@@ -712,11 +734,12 @@ const steps = {
         <label for="visaSel">Visa type</label>
         <select id="visaSel">
           <option value="">Select one…</option>
-          <option value="TITP1">TITP 1 Year</option>
-          <option value="TITP3">TITP 3 Years</option>
-          <option value="TITP5">TITP 5 Years</option>
+          <option value="TITP1">TITP 1</option>
+          <option value="TITP2">TITP 2</option>
+          <option value="TITP3">TITP 3</option>
           <option value="SSW1">SSW1</option>
           <option value="SSW2">SSW2</option>
+          <option value="OTHER">Other visa (e.g. Engineering, IT, Humanities, Translation)</option>
         </select>
       </div>
       <div class="step-actions">${backLink()}<button class="btn seal" id="nextBtn">Continue &rarr;</button></div>`);
@@ -725,7 +748,9 @@ const steps = {
       const val = document.getElementById('visaSel').value;
       if(!val) return;
       state.visaType = val;
-      goStep(val === 'TITP1' ? 'combo' : 'skillChange');
+      if(val === 'TITP1'){ goStep('combo'); }
+      else if(val === 'OTHER'){ goStep('otherChoice'); }
+      else { goStep('skillChange'); }
     });
   },
 
@@ -735,10 +760,10 @@ const steps = {
       <div class="choice-grid">
         <button class="choice" data-v="A"><strong>First-time applicant</strong><span>No prior work experience in Japan</span></button>
         <button class="choice" data-v="B"><strong>Former TITP intern — 1 year in Japan</strong><span>Completed roughly one year as a technical intern trainee</span></button>
-        <button class="choice" data-v="C3"><strong>Former TITP intern — 3 years, moving to SSW</strong><span>Completed a full TITP term and want to move to Specified Skilled Worker status</span></button>
-        <button class="choice" data-v="C5"><strong>Former TITP intern — 5 years, moving to SSW</strong><span>Completed an extended TITP term and want to move to Specified Skilled Worker status</span></button>
-        <button class="choice" data-v="D1"><strong>Currently SSW1, changing company</strong><span>Already working under SSW1 and looking to transfer employer</span></button>
-        <button class="choice" data-v="D2"><strong>Currently SSW2, changing company</strong><span>Already working under SSW2 and looking to transfer employer</span></button>
+        <button class="choice" data-v="C2"><strong>Former TITP intern — TITP 2, moving to SSW</strong><span>Continued and finished 2–3 years of the TITP program</span></button>
+        <button class="choice" data-v="C3"><strong>Former TITP intern — TITP 3, moving to SSW</strong><span>Continued and finished 4–5 years of the TITP program</span></button>
+        <button class="choice" data-v="D1"><strong> SSW1, changing company</strong><span>Already working under SSW1 and looking to transfer employer</span></button>
+        <button class="choice" data-v="D2"><strong> SSW2, changing company</strong><span>Already working under SSW2 and looking to transfer employer</span></button>
       </div>
       ${backBtn()}`);
     bindChoices(v=>{
@@ -747,10 +772,107 @@ const steps = {
     });
   },
 
+  otherChoice(){
+    const total = 6;
+    renderTrail(2, total);
+    const isJapan = state.location === 'Japan';
+    const opt1Label = isJapan ? 'Apply as per profession' : 'Apply as per profession';
+    const opt2Label = isJapan ? 'Transition to SSW' : 'Apply as an SSW';
+    document.getElementById('stepContainer').innerHTML = stepShell('Step 3', 'How would you like to proceed?', `
+      <div class="choice-grid">
+        <button class="choice" data-v="profession"><strong>${opt1Label}</strong><span>Apply directly under your profession</span></button>
+        <button class="choice" data-v="transition"><strong>${opt2Label}</strong><span>Move toward Specified Skilled Worker (SSW) status instead</span></button>
+      </div>
+      ${backBtn()}`);
+    bindChoices(v=>{
+      state.otherPath = v;
+      if(v === 'profession'){ goStep('professionForm'); }
+      else { goStep('otherJlptLevel'); }
+    });
+  },
+
+  otherJlptLevel(){
+    renderTrail(3, 6);
+    document.getElementById('stepContainer').innerHTML = stepShell('Step 4', 'What is your current Japanese-language qualification?', `
+      <div class="field">
+        <label for="otherJlptSel">Qualification level</label>
+        <select id="otherJlptSel">
+          <option value="">Select one…</option>
+          <option value="JLPT N1">JLPT N1</option>
+          <option value="JLPT N2">JLPT N2</option>
+          <option value="JLPT N3">JLPT N3</option>
+          <option value="JLPT N4">JLPT N4</option>
+          <option value="JLPT N5">JLPT N5</option>
+          <option value="JFT-Basic">JFT-Basic</option>
+          <option value="None yet">None yet</option>
+        </select>
+      </div>
+      <div class="step-actions">${backLink()}<button class="btn seal" id="nextBtn">Continue &rarr;</button></div>`);
+    bindBack();
+    document.getElementById('nextBtn').addEventListener('click', ()=>{
+      const val = document.getElementById('otherJlptSel').value;
+      if(!val) return;
+      state.jlptLevel = val;
+      state.otherTransition = true;
+      goStep('combo');
+    });
+  },
+
+  professionForm(){
+    renderTrail(3, 4);
+    document.getElementById('stepContainer').innerHTML = stepShell('Step 4', 'Tell us about your profession', `
+      <div class="field"><label for="profName">Full name</label><input type="text" id="profName" required></div>
+      <div class="field"><label for="profEmail">Email address</label><input type="email" id="profEmail" required></div>
+      <input type="text" id="profHpCheck" name="bis_hp_9284" style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <div class="field"><label for="profTitle">Profession / desired job title</label><input type="text" id="profTitle" placeholder="e.g. Civil Engineer, IT Support, Translator" required></div>
+      <div class="field">
+        <label for="profJlptSel">Japanese-language qualification</label>
+        <select id="profJlptSel">
+          <option value="">Select one…</option>
+          <option value="JLPT N1">JLPT N1</option>
+          <option value="JLPT N2">JLPT N2</option>
+          <option value="JLPT N3">JLPT N3</option>
+          <option value="JLPT N4">JLPT N4</option>
+          <option value="JLPT N5">JLPT N5</option>
+          <option value="JFT-Basic">JFT-Basic</option>
+          <option value="None yet">None yet</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>JLPT / JFT certificate (optional, if you have one)</label>
+        <label class="upload" for="up_profCert">
+          <div>Tap to upload photo</div>
+          <div class="fname" id="fname_profCert">No file selected</div>
+        </label>
+        <input type="file" id="up_profCert" accept="image/*,.pdf">
+      </div>
+      <div class="step-actions">${backLink()}<button class="btn seal" id="submitProfBtn">Submit application</button></div>
+      <div id="submitProfMsg"></div>
+    `);
+    bindBack();
+    document.getElementById('up_profCert').addEventListener('change', (e)=>{
+      const f = e.target.files[0];
+      const nameEl = document.getElementById('fname_profCert');
+      if(f && f.size > MAX_FILE_BYTES){
+        nameEl.textContent = 'That file is too large (max 8MB) — please choose a smaller photo.';
+        nameEl.style.color = 'var(--seal)';
+        e.target.value = '';
+        delete state.files.profCert;
+        return;
+      }
+      nameEl.style.color = '';
+      nameEl.textContent = f ? f.name : 'No file selected';
+      if(f) state.files.profCert = f;
+      else delete state.files.profCert;
+    });
+    document.getElementById('submitProfBtn').addEventListener('click', submitProfessionalApplication);
+  },
+
   combo(){
     const total = wizardTotal();
-    renderTrail(2, total);
-    document.getElementById('stepContainer').innerHTML = stepShell(`Step 3 of ${total}`, 'Which certificates do you already have?', `
+    const idx = total - 2;
+    renderTrail(idx, total);
+    document.getElementById('stepContainer').innerHTML = stepShell(`Step ${idx+1} of ${total}`, 'Which certificates do you already have?', `
       <div class="choice-grid">
         ${CERT_COMBOS.map(c=>`<button class="choice" data-v="${c.key}"><strong>${c.label}</strong><span>${c.desc}</span></button>`).join('')}
       </div>
@@ -767,7 +889,7 @@ const steps = {
 
   studyQuestion(){
     const total = wizardTotal();
-    renderTrail(3, total);
+    renderTrail(total-1, total);
     let need;
     if(!state.combo.jlpt && !state.combo.prometric) need = 'Japanese language lessons (JLPT/JFT) and Prometric skill-test preparation';
     else if(state.combo.jlpt && !state.combo.prometric) need = 'Prometric skill-test preparation';
@@ -789,7 +911,7 @@ const steps = {
 
   studyLeadEmail(){
     const total = wizardTotal();
-    renderTrail(3, total);
+    renderTrail(total-1, total);
     document.getElementById('stepContainer').innerHTML = stepShell('Before you go', `Leave your email so we can follow up`, `
       <div class="note-box">We'll open Facebook Messenger next — but in case you don't get a chance to message us there, leave your email and our team will personally follow up about enrolling in ${state.studyNeed}.</div>
       <div class="field"><label for="leadName">Full name</label><input type="text" id="leadName"></div>
@@ -846,7 +968,7 @@ const steps = {
 
     const isJapan = state.location === 'Japan';
     const isSSWFamily = (state.category === 'D1' || state.category === 'D2') || (isJapan && (state.visaType==='SSW1' || state.visaType==='SSW2'));
-    const isJapanTitpTransferShort = isJapan && (state.visaType==='TITP3' || state.visaType==='TITP5') && state.skillChange==='different';
+    const isJapanTitpTransferShort = isJapan && (state.visaType==='TITP2' || state.visaType==='TITP3') && state.skillChange==='different';
 
     let uploads;
     if(isComboFamily()){
@@ -950,6 +1072,8 @@ function restartWizard(){
   state.willingStudy = null;
   state.studyNeed = null;
   state.skillCategory = null;
+  state.otherPath = null;
+  state.otherTransition = false;
   state.files = {};
   state.fields = {};
   state._uploads = undefined;
@@ -1014,6 +1138,7 @@ async function submitStudyLead(){
           location: state.location,
           visaType: state.visaType,
           category: state.category,
+          categoryLabel: getCategoryLabel(),
           combo: state.combo ? state.combo.key : null,
           studyNeed: state.studyNeed,
           name, email
@@ -1027,6 +1152,62 @@ async function submitStudyLead(){
 
   window.location.href = CONFIG.facebookStudyUrl;
   showFbRedirectStep(CONFIG.facebookStudyUrl);
+}
+
+async function submitProfessionalApplication(){
+  const name = document.getElementById('profName').value.trim();
+  const email = document.getElementById('profEmail').value.trim();
+  const title = document.getElementById('profTitle').value.trim();
+  const jlpt = document.getElementById('profJlptSel').value;
+  const msgBox = document.getElementById('submitProfMsg');
+
+  if(!name || !email || !title){
+    msgBox.innerHTML = `<div class="error-msg">Please fill in your name, email, and profession/desired job title.</div>`;
+    return;
+  }
+  if(CONFIG.webAppUrl.startsWith("PASTE_")){
+    msgBox.innerHTML = `<div class="error-msg">This form isn't connected to a database yet. Add your Apps Script Web App URL in CONFIG.</div>`;
+    return;
+  }
+
+  const submitBtn = document.getElementById('submitProfBtn');
+  submitBtn.disabled = true;
+  msgBox.innerHTML = `<div class="progress-msg">Uploading your application…</div>`;
+
+  try{
+    const filesPayload = {};
+    if(state.files.profCert){
+      const f = state.files.profCert;
+      filesPayload.jlptCert = { name: f.name, mimeType: f.type || 'application/octet-stream', data: await fileToBase64(f) };
+    }
+    const payload = {
+      action: 'submitApplication',
+      hpCheck: document.getElementById('profHpCheck') ? document.getElementById('profHpCheck').value : '',
+      location: state.location,
+      visaType: state.visaType,
+      category: 'OTHER-PROFESSIONAL',
+      categoryLabel: getCategoryLabel(),
+      jlptLevel: jlpt,
+      name, email,
+      professionTitle: title,
+      skillCategory: title,
+      files: filesPayload
+    };
+    const res = await fetch(CONFIG.webAppUrl, {
+      method:'POST',
+      headers:{ 'Content-Type':'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
+    const result = await res.json();
+    if(result.status === 'ok'){
+      showThankYou("Your professional application was received. We'll review everything and contact you by email soon.", true);
+    } else {
+      throw new Error(result.message || 'Unknown error');
+    }
+  }catch(err){
+    submitBtn.disabled = false;
+    msgBox.innerHTML = `<div class="error-msg">Something went wrong sending your application (${escapeHtml(err.message)}). Please try again, or email us directly at ${CONFIG.email}.</div>`;
+  }
 }
 
 async function submitApplication(){
@@ -1067,6 +1248,7 @@ async function submitApplication(){
       location: state.location,
       visaType: state.visaType,
       category: state.category,
+      categoryLabel: getCategoryLabel(),
       combo: state.combo ? state.combo.key : null,
       skillChange: state.skillChange,
       jlptLevel: state.jlptLevel,
