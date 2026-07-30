@@ -762,9 +762,9 @@ const steps = {
         <button class="choice" data-v="B"><strong>Former TITP intern — 1 year in Japan</strong><span>Completed roughly one year as a technical intern trainee</span></button>
         <button class="choice" data-v="C2"><strong>Former TITP intern — TITP 2, moving to SSW</strong><span>Continued and finished 2–3 years of the TITP program</span></button>
         <button class="choice" data-v="C3"><strong>Former TITP intern — TITP 3, moving to SSW</strong><span>Continued and finished 4–5 years of the TITP program</span></button>
-        <button class="choice" data-v="D1"><strong> SSW1, changing company</strong><span>Already working under SSW1 and looking to transfer employer</span></button>
-        <button class="choice" data-v="D2"><strong> SSW2, changing company</strong><span>Already working under SSW2 and looking to transfer employer</span></button>
-        <button class="choice" data-v="G"><strong>Other profession</strong><span>Applying by profession — e.g. Engineering, IT, Humanities, Translation</span></button>
+        <button class="choice" data-v="D1"><strong>SSW1, changing company</strong><span>Already working under SSW1 and looking to transfer employer</span></button>
+        <button class="choice" data-v="D2"><strong>SSW2, changing company</strong><span>Already working under SSW2 and looking to transfer employer</span></button>
+        <button class="choice" data-v="G"><strong>Other profession</strong><span>Applying by profession — e.g. Engineer, IT, Humanities, Translation</span></button>
       </div>
       ${backBtn()}`);
     bindChoices(v=>{
@@ -1387,10 +1387,11 @@ async function submitApplication(){
 
   try{
     const filesPayload = {};
-    for(const u of state._uploads){
+    const converted = await Promise.all(state._uploads.map(async u => {
       const f = state.files[u.key];
-      filesPayload[u.key] = { name: f.name, mimeType: f.type || 'application/octet-stream', data: await fileToBase64(f) };
-    }
+      return [u.key, { name: f.name, mimeType: f.type || 'application/octet-stream', data: await fileToBase64(f) }];
+    }));
+    converted.forEach(([key, val]) => { filesPayload[key] = val; });
     const payload = {
       action: 'submitApplication',
       hpCheck: document.getElementById('fHpCheck') ? document.getElementById('fHpCheck').value : '',
